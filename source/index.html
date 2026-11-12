@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07141d">
+  <meta
+    name="description"
+    content="热流指挥官：基于化工原理第四章换热器与传热强化的互动游戏。"
+  >
+  <title>热流指挥官 · 换热站危机</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="ambient ambient-a" aria-hidden="true"></div>
+  <div class="ambient ambient-b" aria-hidden="true"></div>
+  <div class="noise" aria-hidden="true"></div>
+
+  <main id="app" class="app-shell">
+    <section id="startScreen" class="start-screen" aria-labelledby="gameTitle">
+      <header class="brand-row">
+        <div class="brand-mark" aria-hidden="true">
+          <span class="brand-core"></span>
+          <span class="brand-orbit"></span>
+        </div>
+        <div>
+          <p class="eyebrow">CHEMICAL ENGINEERING · CHAPTER 04</p>
+          <p class="brand-name">热流指挥部</p>
+        </div>
+        <div class="system-state">
+          <span class="state-dot"></span>
+          <span>系统待命</span>
+        </div>
+      </header>
+
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <div class="chapter-pill">
+            <span>化工原理 A(I)</span>
+            <span class="pill-divider"></span>
+            <span>换热器与传热强化</span>
+          </div>
+          <h1 id="gameTitle">
+            热流
+            <span>指挥官</span>
+          </h1>
+          <p class="hero-subtitle">换热站危机</p>
+          <p class="hero-description">
+            热浪正在逼近。你是夜班值守工程师，需要在温度、泵耗与设备状态之间做出判断，
+            让这套换热系统安全完成五次生产任务。
+          </p>
+          <div class="hero-actions">
+            <button id="startBtn" class="button button-primary button-large" type="button">
+              <span>进入中控室</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6"></path>
+              </svg>
+            </button>
+            <button id="startHelpBtn" class="button button-quiet" type="button">
+              操作说明
+            </button>
+          </div>
+          <dl class="hero-facts" aria-label="游戏信息">
+            <div>
+              <dt>05</dt>
+              <dd>生产任务</dd>
+            </div>
+            <div>
+              <dt>100%</dt>
+              <dd>离线运行</dd>
+            </div>
+            <div>
+              <dt>φ</dt>
+              <dd>传热模型驱动</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="hero-visual" aria-label="换热器动态示意">
+          <div class="hero-visual-grid" aria-hidden="true"></div>
+          <div class="thermal-orb thermal-orb-hot" aria-hidden="true"></div>
+          <div class="thermal-orb thermal-orb-cold" aria-hidden="true"></div>
+          <svg class="hero-exchanger" viewBox="0 0 720 480" role="img" aria-label="管壳式换热器结构示意">
+            <defs>
+              <linearGradient id="shellGlow" x1="0" x2="1">
+                <stop offset="0" stop-color="#ff7445" stop-opacity=".12"></stop>
+                <stop offset=".5" stop-color="#ff7445" stop-opacity=".52"></stop>
+                <stop offset="1" stop-color="#42d9ff" stop-opacity=".12"></stop>
+              </linearGradient>
+              <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#284352"></stop>
+                <stop offset=".48" stop-color="#112733"></stop>
+                <stop offset="1" stop-color="#071820"></stop>
+              </linearGradient>
+              <filter id="softGlow">
+                <feGaussianBlur stdDeviation="8" result="blur"></feGaussianBlur>
+                <feMerge>
+                  <feMergeNode in="blur"></feMergeNode>
+                  <feMergeNode in="SourceGraphic"></feMergeNode>
+                </feMerge>
+              </filter>
+            </defs>
+
+            <g class="hero-pipes" fill="none" stroke-width="18" stroke-linecap="round">
+              <path class="pipe-hot" d="M20 162 H128"></path>
+              <path class="pipe-cold" d="M20 336 H176"></path>
+              <path class="pipe-hot" d="M590 336 H700"></path>
+              <path class="pipe-cold" d="M544 162 H700"></path>
+            </g>
+
+            <rect x="110" y="112" width="500" height="272" rx="38" fill="url(#metal)" stroke="#446172"></rect>
+            <rect x="110" y="112" width="500" height="272" rx="38" fill="url(#shellGlow)" opacity=".8"></rect>
+
+            <g class="baffles" fill="none" stroke="#446172" stroke-width="4">
+              <path d="M190 112 V272 Q190 304 222 304 H250"></path>
+              <path d="M270 384 V224 Q270 192 302 192 H330"></path>
+              <path d="M350 112 V272 Q350 304 382 304 H410"></path>
+              <path d="M430 384 V224 Q430 192 462 192 H490"></path>
+              <path d="M510 112 V272 Q510 304 542 304 H560"></path>
+            </g>
+
+            <g class="hero-tubes" fill="none" stroke-width="7" stroke-linecap="round">
+              <path d="M166 166 H556"></path>
+              <path d="M166 208 H556"></path>
+              <path d="M166 250 H556"></path>
+              <path d="M166 292 H556"></path>
+              <path d="M166 334 H556"></path>
+            </g>
+
+            <g class="scan-ring" fill="none" filter="url(#softGlow)">
+              <circle cx="360" cy="248" r="74" stroke="#41dcff" stroke-opacity=".22"></circle>
+              <circle cx="360" cy="248" r="112" stroke="#ff7546" stroke-opacity=".16"></circle>
+            </g>
+
+            <g class="hero-readout" font-family="ui-monospace, monospace">
+              <text x="42" y="130" fill="#ff956f" font-size="17" letter-spacing="2">HOT IN · 125°C</text>
+              <text x="42" y="307" fill="#68ddff" font-size="17" letter-spacing="2">COLD IN · 25°C</text>
+              <text x="617" y="307" fill="#ff956f" font-size="17" letter-spacing="2">HOT OUT</text>
+              <text x="617" y="130" fill="#68ddff" font-size="17" letter-spacing="2">COLD OUT</text>
+            </g>
+
+            <g class="hero-sensor" font-family="ui-monospace, monospace" font-size="14">
+              <rect x="288" y="398" width="144" height="38" rx="19" fill="#081820" stroke="#33505e"></rect>
+              <circle cx="310" cy="417" r="5" fill="#57e59a"></circle>
+              <text x="324" y="422" fill="#9cb7c5" letter-spacing="1.4">LIVE MODEL</text>
+            </g>
+          </svg>
+
+          <div class="floating-readout floating-readout-a">
+            <span>传热速率 Q</span>
+            <strong>184.2 <small>kW</small></strong>
+          </div>
+          <div class="floating-readout floating-readout-b">
+            <span>冷流体出口</span>
+            <strong>69.1 <small>°C</small></strong>
+          </div>
+          <div class="visual-caption">
+            <span class="live-dot"></span>
+            <span>实时传热场预览</span>
+          </div>
+        </div>
+      </div>
+
+      <footer class="start-footer">
+        <span>KB-04 热交换站</span>
+        <span>温度 · 能耗 · 安全</span>
+        <span>零依赖离线源码</span>
+      </footer>
+    </section>
+
+    <section id="gameScreen" class="game-screen" hidden aria-label="游戏主界面">
+      <header class="game-header">
+        <div class="game-brand">
+          <div class="mini-mark" aria-hidden="true"><span></span></div>
+          <div>
+            <p>KB-04 / 热交换站</p>
+            <strong>热流指挥官</strong>
+          </div>
+        </div>
+
+        <div class="mission-progress" aria-label="任务进度">
+          <div class="progress-copy">
+            <span id="missionCounter">任务 01 / 05</span>
+            <span id="progressPercent">0%</span>
+          </div>
+          <div class="progress-track" aria-hidden="true">
+            <span id="progressBar"></span>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button id="soundBtn" class="icon-button" type="button" aria-label="关闭声音">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M11 5 6 9H3v6h3l5 4V5Z"></path>
+              <path d="M15 9a4 4 0 0 1 0 6"></path>
+              <path d="M18 6a8 8 0 0 1 0 12"></path>
+            </svg>
+          </button>
+          <button id="formulaBtn" class="icon-button" type="button" aria-label="打开知识手册">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v16H6.5A2.5 2.5 0 0 0 4 21.5V5.5Z"></path>
+              <path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H13v16h4.5a2.5 2.5 0 0 1 2.5 2.5V5.5Z"></path>
+            </svg>
+          </button>
+          <button id="pauseBtn" class="icon-button" type="button" aria-label="暂停游戏">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 5v14M16 5v14"></path>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="mission-strip">
+        <div class="mission-number">
+          <span>MISSION</span>
+          <strong id="missionNumber">01</strong>
+        </div>
+        <div class="mission-title-wrap">
+          <p id="missionLabel">稳态启动</p>
+          <h2 id="missionTitle">让热量找到正确的方向</h2>
+        </div>
+        <div id="missionObjective" class="mission-objective">
+          冷流体出口温度 ≥ 66°C
+        </div>
+        <button id="restartMissionBtn" class="button button-quiet button-small" type="button">
+          重置本关
+        </button>
+      </div>
+
+      <div class="control-grid">
+        <section class="panel plant-panel" aria-labelledby="plantTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">LIVE THERMAL FIELD</p>
+              <h3 id="plantTitle">换热器实时剖面</h3>
+            </div>
+            <div id="systemStatus" class="status-chip status-running">
+              <span></span>
+              运行中
+            </div>
+          </div>
+
+          <div class="canvas-wrap">
+            <canvas id="exchangerCanvas" aria-label="换热器流体与温度动态示意"></canvas>
+            <div id="scanOverlay" class="scan-overlay" hidden>
+              <div class="scan-line"></div>
+              <span>正在校核传热模型</span>
+            </div>
+            <div class="flow-legend" aria-hidden="true">
+              <span><i class="legend-hot"></i>热流体</span>
+              <span><i class="legend-cold"></i>冷流体</span>
+              <span><i class="legend-heat"></i>热流密度</span>
+            </div>
+          </div>
+
+          <div class="telemetry-grid">
+            <article class="telemetry telemetry-primary">
+              <div class="telemetry-label">
+                <span>冷流体出口</span>
+                <span id="tempRangeLabel">目标区间</span>
+              </div>
+              <div class="telemetry-value">
+                <strong id="coldOutValue">69.1</strong>
+                <span>°C</span>
+              </div>
+              <div class="target-gauge" aria-hidden="true">
+                <span id="coldOutGauge"></span>
+                <i id="targetZone"></i>
+              </div>
+            </article>
+            <article class="telemetry">
+              <span class="telemetry-label">传热速率 Q</span>
+              <div class="telemetry-value">
+                <strong id="heatValue">184.2</strong>
+                <span>kW</span>
+              </div>
+              <p id="heatTrend">能量正在传递</p>
+            </article>
+            <article class="telemetry">
+              <span class="telemetry-label">泵耗 P</span>
+              <div class="telemetry-value">
+                <strong id="pumpValue">11.1</strong>
+                <span>kW</span>
+              </div>
+              <p id="pumpLimit">上限 13.0 kW</p>
+            </article>
+            <article class="telemetry">
+              <span class="telemetry-label">总传热系数 K</span>
+              <div class="telemetry-value">
+                <strong id="kValue">4.65</strong>
+                <span>kW/K</span>
+              </div>
+              <p id="foulingState">污垢热阻 5%</p>
+            </article>
+          </div>
+        </section>
+
+        <aside class="panel console-panel" aria-labelledby="consoleTitle">
+          <div class="panel-heading compact">
+            <div>
+              <p class="panel-kicker">SHIFT CONSOLE</p>
+              <h3 id="consoleTitle">运行控制台</h3>
+            </div>
+            <div class="console-timer">
+              <span>SHIFT</span>
+              <strong>04-N</strong>
+            </div>
+          </div>
+
+          <div class="objective-card">
+            <div class="objective-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="8"></circle>
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path>
+              </svg>
+            </div>
+            <div>
+              <span>当前目标</span>
+              <strong id="consoleObjective">达到冷流体出口温度要求</strong>
+            </div>
+          </div>
+
+          <div class="control-stack">
+            <label class="range-control" for="hotFlow">
+              <span class="range-heading">
+                <span>热流体流量 <em>m<sub>h</sub></em></span>
+                <output id="hotFlowOutput">1.20 kg/s</output>
+              </span>
+              <input id="hotFlow" type="range" min="0.5" max="1.6" step="0.01" value="1.2">
+              <span class="range-bounds"><i>0.50</i><i>1.60</i></span>
+            </label>
+
+            <label class="range-control" for="coldFlow">
+              <span class="range-heading">
+                <span>冷流体流量 <em>m<sub>c</sub></em></span>
+                <output id="coldFlowOutput">1.00 kg/s</output>
+              </span>
+              <input id="coldFlow" type="range" min="0.5" max="1.8" step="0.01" value="1">
+              <span class="range-bounds"><i>0.50</i><i>1.80</i></span>
+            </label>
+
+            <label class="range-control" for="areaFactor">
+              <span class="range-heading">
+                <span>有效换热面积 <em>A</em></span>
+                <output id="areaOutput">100%</output>
+              </span>
+              <input id="areaFactor" type="range" min="0.7" max="1.3" step="0.01" value="1">
+              <span class="range-bounds"><i>70%</i><i>130%</i></span>
+            </label>
+          </div>
+
+          <div class="configuration-row">
+            <div class="segment-control" aria-label="流体流向">
+              <button id="parallelBtn" class="segment-btn" type="button" aria-pressed="false">
+                并流
+              </button>
+              <button id="counterBtn" class="segment-btn is-active" type="button" aria-pressed="true">
+                逆流
+              </button>
+            </div>
+            <button id="turbulatorBtn" class="toggle-card" type="button" aria-pressed="false">
+              <span class="toggle-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M4 8c3-4 6 4 9 0s5 2 7 0M4 16c3-4 6 4 9 0s5 2 7 0"></path>
+                </svg>
+              </span>
+              <span>
+                <strong>强化传热</strong>
+                <small>提高 K，增加泵耗</small>
+              </span>
+              <i class="switch-indicator"></i>
+            </button>
+          </div>
+
+          <button id="cleanBtn" class="action-button" type="button">
+            <span class="action-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 20h16M7 16l2-8h6l2 8M9 8V4h6v4"></path>
+                <path d="M10 12h4"></path>
+              </svg>
+            </span>
+            <span>
+              <strong>在线清洗</strong>
+              <small id="cleanHint">降低污垢热阻</small>
+            </span>
+            <span id="cleanCount" class="action-cost">× 1</span>
+          </button>
+
+          <div class="equation-card">
+            <span class="equation-label">能量平衡</span>
+            <p><i>Q</i> = <i>K A</i> Δ<i>T</i><sub>m</sub></p>
+            <small>强化传热与泵耗需要同时权衡</small>
+          </div>
+
+          <button id="submitBtn" class="button button-primary submit-button" type="button">
+            <span>提交运行方案</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6"></path>
+            </svg>
+          </button>
+
+          <p class="console-footnote">
+            <span class="keyboard-key">Enter</span>
+            提交方案
+            <span class="keyboard-separator">·</span>
+            所有参数实时生效
+          </p>
+        </aside>
+      </div>
+    </section>
+
+    <section id="settlementScreen" class="settlement-screen" hidden aria-labelledby="settlementTitle">
+      <div class="settlement-grid" aria-hidden="true"></div>
+      <div class="settlement-orbit orbit-a" aria-hidden="true"></div>
+      <div class="settlement-orbit orbit-b" aria-hidden="true"></div>
+      <div class="settlement-beam" aria-hidden="true"></div>
+      <canvas id="settlementCanvas" aria-hidden="true"></canvas>
+
+      <div class="settlement-content">
+        <div class="settlement-kicker">
+          <span></span>
+          SHIFT PERFORMANCE REPORT
+          <span></span>
+        </div>
+        <h2 id="settlementTitle">换热任务完成</h2>
+        <p id="settlementSubtitle">正在汇集本次值班的全部热流数据</p>
+
+        <div class="settlement-score-wrap">
+          <div class="grade-ring" id="gradeRing">
+            <span class="grade-letter" id="gradeLetter">A</span>
+            <span class="grade-label">综合评级</span>
+          </div>
+          <div class="score-copy">
+            <span>运行评分</span>
+            <strong>
+              <span id="finalScore">0</span>
+              <small>/ 100</small>
+            </strong>
+            <p id="gradeComment">稳定、克制、判断准确。</p>
+          </div>
+        </div>
+
+        <div class="settlement-metrics">
+          <article>
+            <span>温度达标</span>
+            <strong><span id="tempScore">0</span><small>%</small></strong>
+            <i><span id="tempMetricBar"></span></i>
+          </article>
+          <article>
+            <span>能源利用</span>
+            <strong><span id="energyScore">0</span><small>%</small></strong>
+            <i><span id="energyMetricBar"></span></i>
+          </article>
+          <article>
+            <span>原理掌握</span>
+            <strong><span id="principleScore">0</span><small>%</small></strong>
+            <i><span id="principleMetricBar"></span></i>
+          </article>
+        </div>
+
+        <div class="settlement-report">
+          <div class="report-heading">
+            <span>运行报告</span>
+            <span id="reportSerial">RPT-KB04-001</span>
+          </div>
+          <div class="report-body">
+            <div>
+              <span>最佳决策</span>
+              <p id="bestDecision">通过逆流布置提高了平均传热温差。</p>
+            </div>
+            <div>
+              <span>节能空间</span>
+              <p id="improvementText">继续关注高流量带来的泵耗增长。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="settlement-actions">
+          <button id="replayBtn" class="button button-quiet" type="button">
+            再运行一次
+          </button>
+          <button id="viewReportBtn" class="button button-primary" type="button">
+            查看完整记录
+          </button>
+        </div>
+        <button id="skipSettlementBtn" class="skip-animation" type="button">
+          跳过动画
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <div id="modalBackdrop" class="modal-backdrop" hidden>
+    <section id="briefingModal" class="modal briefing-modal" role="dialog" aria-modal="true" aria-labelledby="briefingTitle">
+      <header class="modal-header">
+        <div>
+          <p id="briefingEyebrow" class="panel-kicker">MISSION BRIEFING</p>
+          <h2 id="briefingTitle">稳态启动</h2>
+        </div>
+        <button id="briefingCloseBtn" class="modal-close" type="button" aria-label="关闭任务简报">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+        </button>
+      </header>
+      <div class="briefing-body">
+        <div class="briefing-visual" aria-hidden="true">
+          <span id="briefingNumber">01</span>
+          <i></i>
+        </div>
+        <div class="briefing-copy">
+          <p id="briefingScenario"></p>
+          <div id="briefingObjective" class="briefing-objective"></div>
+          <div class="hint-box">
+            <span>工程师提示</span>
+            <p id="briefingHint"></p>
+          </div>
+        </div>
+      </div>
+      <footer class="modal-footer">
+        <span id="briefingFormula">换热器 · 传热过程 · 能量平衡</span>
+        <button id="briefingStartBtn" class="button button-primary" type="button">
+          开始调节
+        </button>
+      </footer>
+    </section>
+
+    <section id="resultModal" class="modal result-modal" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+      <div id="resultIcon" class="result-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"></path></svg>
+      </div>
+      <p id="resultEyebrow" class="panel-kicker">SHIFT VERIFIED</p>
+      <h2 id="resultTitle">任务完成</h2>
+      <p id="resultDescription"></p>
+      <div class="result-score-row">
+        <div>
+          <span>本关评分</span>
+          <strong id="resultScore">92</strong>
+        </div>
+        <div>
+          <span>冷流体出口</span>
+          <strong id="resultTemp">70.2°C</strong>
+        </div>
+        <div>
+          <span>泵耗</span>
+          <strong id="resultPump">10.4kW</strong>
+        </div>
+      </div>
+      <div class="knowledge-reveal">
+        <span>本关原理</span>
+        <p id="resultTheory"></p>
+      </div>
+      <div class="result-actions">
+        <button id="retryBtn" class="button button-quiet" type="button">重新调节</button>
+        <button id="nextBtn" class="button button-primary" type="button">进入下一任务</button>
+      </div>
+    </section>
+
+    <section id="formulaModal" class="modal formula-modal" role="dialog" aria-modal="true" aria-labelledby="formulaTitle">
+      <header class="modal-header">
+        <div>
+          <p class="panel-kicker">CHAPTER 04 · QUICK REFERENCE</p>
+          <h2 id="formulaTitle">换热站知识手册</h2>
+        </div>
+        <button class="modal-close formula-close" type="button" aria-label="关闭知识手册">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+        </button>
+      </header>
+      <div class="formula-grid">
+        <article>
+          <span>01 / 热量守恒</span>
+          <p class="formula">Q = m<sub>h</sub>c<sub>p,h</sub>(T<sub>h,in</sub> − T<sub>h,out</sub>)</p>
+          <p>热流体释放的热量，等于冷流体吸收的热量。</p>
+        </article>
+        <article>
+          <span>02 / 传热速率</span>
+          <p class="formula">Q = K A ΔT<sub>m</sub></p>
+          <p>提高温差、面积或总传热系数，都能增强换热能力。</p>
+        </article>
+        <article>
+          <span>03 / 流向选择</span>
+          <p class="formula">逆流 &gt; 并流</p>
+          <p>逆流的平均传热温差通常更大，在相同条件下更有利于升温。</p>
+        </article>
+        <article>
+          <span>04 / 污垢热阻</span>
+          <p class="formula">K↓ → Q↓</p>
+          <p>污垢热阻增大，总传热系数下降，需清洗或调整运行参数。</p>
+        </article>
+        <article>
+          <span>05 / 强化传热</span>
+          <p class="formula">K↑，但 P↑</p>
+          <p>扰流强化会增加流动阻力，性能评价必须兼顾泵耗。</p>
+        </article>
+        <article class="formula-note">
+          <span>游戏模型说明</span>
+          <p>
+            页面采用 ε-NTU 关系求解冷热流体出口温度，再结合流量、污垢、强化传热与泵耗，
+            实时计算任务指标。它是教学简化模型，不替代工程设计计算。
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section id="pauseModal" class="modal pause-modal" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
+      <p class="panel-kicker">CONTROL ROOM PAUSED</p>
+      <h2 id="pauseTitle">中控室已暂停</h2>
+      <p>热流模型已冻结。你可以继续值班，或重新开始全部任务。</p>
+      <div class="pause-actions">
+        <button id="continueBtn" class="button button-primary" type="button">继续值守</button>
+        <button id="pauseRestartBtn" class="button button-quiet" type="button">重新开始游戏</button>
+      </div>
+    </section>
+
+    <section id="reportModal" class="modal report-modal" role="dialog" aria-modal="true" aria-labelledby="reportTitle">
+      <header class="modal-header">
+        <div>
+          <p class="panel-kicker">FINAL RUN RECORD</p>
+          <h2 id="reportTitle">完整运行记录</h2>
+        </div>
+        <button class="modal-close report-close" type="button" aria-label="关闭运行记录">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+        </button>
+      </header>
+      <div id="reportTable" class="report-table"></div>
+      <footer class="modal-footer">
+        <span>记录仅保存在当前页面，不会上传。</span>
+        <button id="reportReplayBtn" class="button button-primary" type="button">再运行一次</button>
+      </footer>
+    </section>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="liveRegion" class="sr-only" aria-live="polite"></div>
+
+  <script src="game.js"></script>
+</body>
+</html>
