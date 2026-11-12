@@ -1,0 +1,4799 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07141d">
+  <meta
+    name="description"
+    content="热流指挥官：基于化工原理第四章换热器与传热强化的互动游戏。"
+  >
+  <title>热流指挥官 · 换热站危机（手机版）</title>
+  <style>
+:root {
+  color-scheme: dark;
+  --bg: #06111a;
+  --bg-deep: #030a10;
+  --panel: rgba(9, 26, 37, 0.89);
+  --panel-solid: #091b26;
+  --panel-soft: rgba(17, 41, 54, 0.72);
+  --line: rgba(135, 181, 202, 0.18);
+  --line-strong: rgba(135, 181, 202, 0.32);
+  --text: #f1f7f9;
+  --muted: #8fa9b7;
+  --muted-strong: #b5c9d3;
+  --cyan: #46d9ff;
+  --cyan-soft: rgba(70, 217, 255, 0.13);
+  --orange: #ff7546;
+  --orange-soft: rgba(255, 117, 70, 0.14);
+  --yellow: #ffd05a;
+  --green: #58e7a0;
+  --green-soft: rgba(88, 231, 160, 0.13);
+  --red: #ff5d6c;
+  --shadow: 0 30px 90px rgba(0, 0, 0, 0.34);
+  --radius-lg: 26px;
+  --radius-md: 18px;
+  --radius-sm: 12px;
+  --font-ui: "Microsoft YaHei UI", "PingFang SC", "Noto Sans CJK SC", sans-serif;
+  --font-mono: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  background: var(--bg-deep);
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: hidden;
+  color: var(--text);
+  font-family: var(--font-ui);
+  background:
+    radial-gradient(circle at 12% 10%, rgba(255, 117, 70, 0.1), transparent 30%),
+    radial-gradient(circle at 86% 30%, rgba(70, 217, 255, 0.12), transparent 34%),
+    linear-gradient(140deg, #071721 0%, #06111a 48%, #02080d 100%);
+}
+
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  content: "";
+  opacity: 0.36;
+  background-image:
+    linear-gradient(rgba(122, 178, 201, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(122, 178, 201, 0.08) 1px, transparent 1px);
+  background-size: 74px 74px;
+  mask-image: radial-gradient(circle at 50% 38%, black, transparent 74%);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 3px;
+}
+
+button:disabled,
+input:disabled {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.ambient {
+  position: fixed;
+  z-index: -2;
+  width: 42vw;
+  height: 42vw;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.34;
+  pointer-events: none;
+}
+
+.ambient-a {
+  top: -20vw;
+  right: -10vw;
+  background: rgba(33, 176, 230, 0.32);
+  animation: ambientDriftA 16s ease-in-out infinite alternate;
+}
+
+.ambient-b {
+  bottom: -23vw;
+  left: -15vw;
+  background: rgba(255, 102, 57, 0.24);
+  animation: ambientDriftB 19s ease-in-out infinite alternate;
+}
+
+.noise {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.045;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/%3E%3C/svg%3E");
+}
+
+.app-shell {
+  position: relative;
+  width: min(1560px, 100%);
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: clamp(18px, 2.7vw, 38px);
+}
+
+.start-screen {
+  display: flex;
+  min-height: calc(100vh - clamp(36px, 5.4vw, 76px));
+  flex-direction: column;
+  animation: screenIn 0.7s ease both;
+}
+
+.brand-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 52px;
+}
+
+.brand-mark {
+  position: relative;
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid rgba(70, 217, 255, 0.34);
+  border-radius: 50%;
+}
+
+.brand-core {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 18px var(--cyan);
+}
+
+.brand-orbit {
+  position: absolute;
+  width: 27px;
+  height: 12px;
+  border: 1px solid var(--orange);
+  border-radius: 50%;
+  transform: rotate(-35deg);
+}
+
+.brand-row p {
+  margin: 0;
+}
+
+.eyebrow {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+
+.brand-name {
+  margin-top: 3px !important;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.system-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding: 9px 13px;
+  color: var(--muted-strong);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(5, 17, 25, 0.52);
+}
+
+.state-dot,
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 14px rgba(88, 231, 160, 0.9);
+  animation: pulseDot 2s ease-in-out infinite;
+}
+
+.hero-grid {
+  display: grid;
+  flex: 1;
+  grid-template-columns: minmax(0, 0.9fr) minmax(500px, 1.1fr);
+  gap: clamp(35px, 5vw, 92px);
+  align-items: center;
+  padding: clamp(40px, 6vh, 92px) 0 34px;
+}
+
+.hero-copy {
+  position: relative;
+  z-index: 2;
+  max-width: 680px;
+}
+
+.chapter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  color: var(--muted-strong);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+
+.chapter-pill > span:first-child {
+  color: var(--cyan);
+}
+
+.pill-divider {
+  width: 22px;
+  height: 1px;
+  background: var(--line-strong);
+}
+
+.hero-copy h1 {
+  margin: clamp(23px, 4vh, 40px) 0 0;
+  font-size: clamp(74px, 9.1vw, 142px);
+  line-height: 0.82;
+  letter-spacing: -0.085em;
+  text-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+}
+
+.hero-copy h1 span {
+  display: block;
+  margin-left: 0.6em;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(235, 246, 249, 0.86);
+}
+
+.hero-subtitle {
+  margin: 28px 0 0;
+  color: var(--orange);
+  font-size: clamp(21px, 2vw, 29px);
+  font-weight: 700;
+  letter-spacing: 0.24em;
+}
+
+.hero-description {
+  max-width: 570px;
+  margin: 20px 0 0;
+  color: var(--muted-strong);
+  font-size: 15px;
+  line-height: 1.9;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 34px;
+}
+
+.button {
+  display: inline-flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 19px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+}
+
+.button-primary {
+  color: #06131a;
+  background: linear-gradient(135deg, #5ce3ff, #38c5ed);
+  box-shadow: 0 12px 32px rgba(49, 198, 237, 0.19);
+}
+
+.button-primary:hover {
+  box-shadow: 0 14px 38px rgba(49, 198, 237, 0.3);
+}
+
+.button-quiet {
+  color: var(--muted-strong);
+  border-color: var(--line-strong);
+  background: rgba(9, 28, 39, 0.56);
+}
+
+.button-quiet:hover {
+  color: var(--text);
+  border-color: rgba(70, 217, 255, 0.36);
+}
+
+.button-large {
+  min-height: 58px;
+  padding: 0 24px 0 27px;
+}
+
+.button svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.button-small {
+  min-height: 38px;
+  padding: 0 14px;
+  font-size: 12px;
+}
+
+.hero-facts {
+  display: flex;
+  gap: clamp(26px, 4vw, 62px);
+  margin: 54px 0 0;
+}
+
+.hero-facts div {
+  position: relative;
+}
+
+.hero-facts div + div::before {
+  position: absolute;
+  top: 4px;
+  left: calc(clamp(26px, 4vw, 62px) / -2);
+  width: 1px;
+  height: 42px;
+  content: "";
+  background: var(--line);
+}
+
+.hero-facts dt {
+  font-family: var(--font-mono);
+  font-size: 24px;
+}
+
+.hero-facts dd {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.hero-visual {
+  position: relative;
+  min-height: 580px;
+  isolation: isolate;
+}
+
+.hero-visual-grid {
+  position: absolute;
+  inset: 5% 0 0;
+  z-index: -2;
+  border: 1px solid rgba(118, 171, 192, 0.12);
+  border-radius: 50%;
+  background:
+    linear-gradient(rgba(111, 169, 190, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(111, 169, 190, 0.07) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: radial-gradient(circle, black 25%, transparent 72%);
+  transform: rotate(-7deg) scale(1.03);
+}
+
+.thermal-orb {
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  filter: blur(60px);
+  opacity: 0.24;
+}
+
+.thermal-orb-hot {
+  top: 12%;
+  right: 0;
+  width: 42%;
+  height: 42%;
+  background: var(--orange);
+}
+
+.thermal-orb-cold {
+  bottom: 9%;
+  left: 10%;
+  width: 48%;
+  height: 48%;
+  background: #27bdee;
+}
+
+.hero-exchanger {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.38));
+}
+
+.hero-pipes .pipe-hot {
+  stroke: rgba(255, 117, 70, 0.58);
+}
+
+.hero-pipes .pipe-cold {
+  stroke: rgba(70, 217, 255, 0.54);
+}
+
+.hero-tubes {
+  stroke: rgba(110, 224, 255, 0.68);
+  filter: drop-shadow(0 0 8px rgba(70, 217, 255, 0.32));
+  animation: tubePulse 3.4s ease-in-out infinite;
+}
+
+.scan-ring {
+  transform-origin: 360px 248px;
+  animation: scanRotate 18s linear infinite;
+}
+
+.scan-ring circle:last-child {
+  stroke-dasharray: 16 24;
+}
+
+.floating-readout {
+  position: absolute;
+  min-width: 160px;
+  padding: 14px 16px;
+  border: 1px solid rgba(126, 184, 207, 0.2);
+  border-radius: 14px;
+  background: rgba(5, 20, 29, 0.74);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(15px);
+}
+
+.floating-readout span {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.floating-readout strong {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 500;
+}
+
+.floating-readout small {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.floating-readout-a {
+  top: 21%;
+  left: 2%;
+  animation: floatReadout 5.5s ease-in-out infinite;
+}
+
+.floating-readout-b {
+  right: 1%;
+  bottom: 21%;
+  animation: floatReadout 6.2s ease-in-out 0.8s infinite;
+}
+
+.visual-caption {
+  position: absolute;
+  bottom: 4%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  transform: translateX(-50%);
+}
+
+.start-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding-top: 18px;
+  color: rgba(143, 169, 183, 0.68);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  border-top: 1px solid var(--line);
+}
+
+.game-screen {
+  min-height: calc(100vh - clamp(36px, 5.4vw, 76px));
+  animation: screenIn 0.45s ease both;
+}
+
+.game-header {
+  display: grid;
+  grid-template-columns: 1fr minmax(300px, 520px) 1fr;
+  gap: 26px;
+  align-items: center;
+  padding: 4px 0 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.game-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mini-mark {
+  display: grid;
+  width: 35px;
+  height: 35px;
+  place-items: center;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  transform: rotate(45deg);
+}
+
+.mini-mark span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 13px var(--cyan);
+}
+
+.game-brand p,
+.game-brand strong {
+  margin: 0;
+}
+
+.game-brand p {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.game-brand strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+}
+
+.mission-progress {
+  min-width: 0;
+}
+
+.progress-copy {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+.progress-track {
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(142, 177, 193, 0.13);
+}
+
+.progress-track span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--cyan), #89ebff);
+  box-shadow: 0 0 16px rgba(70, 217, 255, 0.55);
+  transition: width 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.header-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.icon-button,
+.modal-close {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  place-items: center;
+  color: var(--muted-strong);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(8, 24, 34, 0.58);
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.icon-button:hover,
+.modal-close:hover {
+  color: var(--text);
+  border-color: var(--line-strong);
+  background: rgba(16, 41, 54, 0.8);
+}
+
+.icon-button svg,
+.modal-close svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.icon-button.is-muted::after {
+  position: absolute;
+  width: 20px;
+  height: 1px;
+  content: "";
+  background: currentColor;
+  transform: rotate(-45deg);
+}
+
+.mission-strip {
+  display: grid;
+  grid-template-columns: auto minmax(260px, 1fr) minmax(220px, auto) auto;
+  gap: 24px;
+  align-items: center;
+  padding: 22px 0;
+}
+
+.mission-number {
+  padding-right: 23px;
+  border-right: 1px solid var(--line);
+}
+
+.mission-number span {
+  display: block;
+  color: var(--orange);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+}
+
+.mission-number strong {
+  display: block;
+  margin-top: 1px;
+  font-family: var(--font-mono);
+  font-size: 31px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.mission-title-wrap p,
+.mission-title-wrap h2 {
+  margin: 0;
+}
+
+.mission-title-wrap p {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.mission-title-wrap h2 {
+  margin-top: 5px;
+  font-size: clamp(17px, 1.5vw, 23px);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.mission-objective {
+  justify-self: end;
+  padding: 9px 13px;
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  border: 1px solid rgba(70, 217, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(70, 217, 255, 0.07);
+}
+
+.control-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.48fr) minmax(380px, 0.72fr);
+  gap: 18px;
+}
+
+.panel {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.plant-panel {
+  min-width: 0;
+  padding: 20px;
+}
+
+.console-panel {
+  padding: 20px;
+}
+
+.panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.panel-heading.compact {
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.panel-kicker {
+  margin: 0 0 5px;
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+}
+
+.panel-heading h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.status-chip {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+.status-chip > span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.status-running {
+  color: var(--green);
+}
+
+.status-running > span {
+  background: var(--green);
+  box-shadow: 0 0 12px var(--green);
+}
+
+.status-warning {
+  color: var(--yellow);
+}
+
+.status-warning > span {
+  background: var(--yellow);
+  box-shadow: 0 0 12px var(--yellow);
+}
+
+.status-danger {
+  color: var(--red);
+}
+
+.status-danger > span {
+  background: var(--red);
+  box-shadow: 0 0 12px var(--red);
+}
+
+.canvas-wrap {
+  position: relative;
+  margin-top: 15px;
+  overflow: hidden;
+  min-height: 330px;
+  border: 1px solid rgba(128, 179, 200, 0.13);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at 56% 47%, rgba(32, 121, 151, 0.1), transparent 42%),
+    linear-gradient(180deg, rgba(5, 17, 25, 0.45), rgba(3, 12, 18, 0.84));
+}
+
+.canvas-wrap::before {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  content: "";
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(112, 174, 198, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(112, 174, 198, 0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(black, transparent 90%);
+}
+
+#exchangerCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 330px;
+}
+
+.flow-legend {
+  position: absolute;
+  right: 13px;
+  bottom: 11px;
+  z-index: 2;
+  display: flex;
+  gap: 13px;
+  color: rgba(181, 201, 211, 0.66);
+  font-family: var(--font-mono);
+  font-size: 8px;
+}
+
+.flow-legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.flow-legend i {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.legend-hot {
+  background: var(--orange);
+  box-shadow: 0 0 7px var(--orange);
+}
+
+.legend-cold {
+  background: var(--cyan);
+  box-shadow: 0 0 7px var(--cyan);
+}
+
+.legend-heat {
+  background: var(--yellow);
+}
+
+.scan-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  background: rgba(3, 13, 19, 0.74);
+  backdrop-filter: blur(3px);
+}
+
+.scan-overlay > span {
+  position: relative;
+  z-index: 2;
+  padding: 10px 14px;
+  border: 1px solid rgba(70, 217, 255, 0.25);
+  border-radius: 6px;
+  background: rgba(3, 15, 22, 0.84);
+}
+
+.scan-line {
+  position: absolute;
+  top: -15%;
+  left: 0;
+  width: 100%;
+  height: 15%;
+  background: linear-gradient(transparent, rgba(70, 217, 255, 0.2), var(--cyan));
+  box-shadow: 0 8px 30px rgba(70, 217, 255, 0.22);
+  animation: scanDown 1.5s ease-in-out infinite;
+}
+
+.telemetry-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 9px;
+  margin-top: 10px;
+}
+
+.telemetry {
+  min-width: 0;
+  padding: 13px 14px;
+  border: 1px solid rgba(128, 179, 200, 0.12);
+  border-radius: 11px;
+  background: rgba(10, 28, 39, 0.6);
+}
+
+.telemetry-primary {
+  background: linear-gradient(140deg, rgba(70, 217, 255, 0.1), rgba(10, 28, 39, 0.62));
+}
+
+.telemetry-label {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.telemetry-label > span:last-child {
+  color: rgba(143, 169, 183, 0.6);
+  font-family: var(--font-mono);
+  font-size: 7px;
+}
+
+.telemetry-value {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.telemetry-value strong {
+  font-family: var(--font-mono);
+  font-size: clamp(21px, 2vw, 29px);
+  font-weight: 400;
+  line-height: 1;
+}
+
+.telemetry-value span {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 9px;
+}
+
+.telemetry p {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.target-gauge {
+  position: relative;
+  height: 3px;
+  margin-top: 11px;
+  border-radius: 99px;
+  background: rgba(146, 181, 197, 0.12);
+}
+
+.target-gauge span {
+  display: block;
+  width: 50%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--cyan);
+  box-shadow: 0 0 12px rgba(70, 217, 255, 0.4);
+  transition: width 180ms linear;
+}
+
+.target-gauge i {
+  position: absolute;
+  top: -3px;
+  height: 9px;
+  border: 1px solid rgba(88, 231, 160, 0.45);
+  border-radius: 4px;
+  background: rgba(88, 231, 160, 0.13);
+}
+
+.console-timer {
+  text-align: right;
+}
+
+.console-timer span {
+  display: block;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 7px;
+  letter-spacing: 0.1em;
+}
+
+.console-timer strong {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 400;
+}
+
+.objective-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0;
+  padding: 12px;
+  border: 1px solid rgba(255, 117, 70, 0.17);
+  border-radius: 11px;
+  background: rgba(255, 117, 70, 0.055);
+}
+
+.objective-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--orange);
+  border-radius: 9px;
+  background: rgba(255, 117, 70, 0.1);
+}
+
+.objective-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+}
+
+.objective-card span {
+  display: block;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.objective-card strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.control-stack {
+  display: grid;
+  gap: 14px;
+}
+
+.range-control {
+  display: block;
+}
+
+.range-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted-strong);
+  font-size: 11px;
+}
+
+.range-heading em {
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-style: normal;
+  font-size: 10px;
+}
+
+.range-heading output {
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+
+.range-control input[type="range"] {
+  width: 100%;
+  height: 18px;
+  margin: 8px 0 0;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.range-control input[type="range"]::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 99px;
+  background:
+    linear-gradient(var(--cyan), var(--cyan)) 0 / var(--fill, 50%) 100% no-repeat,
+    rgba(132, 171, 189, 0.17);
+}
+
+.range-control input[type="range"]::-moz-range-track {
+  height: 3px;
+  border-radius: 99px;
+  background: rgba(132, 171, 189, 0.17);
+}
+
+.range-control input[type="range"]::-moz-range-progress {
+  height: 3px;
+  border-radius: 99px;
+  background: var(--cyan);
+}
+
+.range-control input[type="range"]::-webkit-slider-thumb {
+  width: 13px;
+  height: 13px;
+  margin-top: -5px;
+  appearance: none;
+  border: 2px solid #07151e;
+  border-radius: 50%;
+  background: #dff8ff;
+  box-shadow: 0 0 0 3px rgba(70, 217, 255, 0.14), 0 0 13px rgba(70, 217, 255, 0.48);
+}
+
+.range-control input[type="range"]::-moz-range-thumb {
+  width: 11px;
+  height: 11px;
+  border: 2px solid #07151e;
+  border-radius: 50%;
+  background: #dff8ff;
+  box-shadow: 0 0 0 3px rgba(70, 217, 255, 0.14);
+}
+
+.range-bounds {
+  display: flex;
+  justify-content: space-between;
+  color: rgba(143, 169, 183, 0.48);
+  font-family: var(--font-mono);
+  font-size: 7px;
+}
+
+.range-bounds i {
+  font-style: normal;
+}
+
+.configuration-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 9px;
+  margin-top: 15px;
+}
+
+.segment-control {
+  display: flex;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(4, 15, 22, 0.52);
+}
+
+.segment-btn {
+  min-width: 54px;
+  padding: 8px 10px;
+  color: var(--muted);
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.segment-btn.is-active {
+  color: #06141b;
+  background: var(--cyan);
+}
+
+.toggle-card {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  text-align: left;
+  color: var(--muted-strong);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(4, 15, 22, 0.52);
+  cursor: pointer;
+}
+
+.toggle-card.is-active {
+  color: var(--text);
+  border-color: rgba(255, 208, 90, 0.28);
+  background: rgba(255, 208, 90, 0.07);
+}
+
+.toggle-icon {
+  display: grid;
+  width: 27px;
+  height: 27px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--cyan);
+  border-radius: 7px;
+  background: var(--cyan-soft);
+}
+
+.toggle-icon svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+}
+
+.toggle-card > span:nth-child(2) {
+  min-width: 0;
+}
+
+.toggle-card strong,
+.toggle-card small {
+  display: block;
+}
+
+.toggle-card strong {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.toggle-card small {
+  margin-top: 2px;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 8px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.switch-indicator {
+  position: relative;
+  width: 25px;
+  height: 14px;
+  margin-left: auto;
+  flex: 0 0 auto;
+  border-radius: 99px;
+  background: rgba(143, 169, 183, 0.18);
+}
+
+.switch-indicator::after {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 8px;
+  height: 8px;
+  content: "";
+  border-radius: 50%;
+  background: var(--muted);
+  transition:
+    left 170ms ease,
+    background 170ms ease;
+}
+
+.toggle-card.is-active .switch-indicator {
+  background: rgba(255, 208, 90, 0.2);
+}
+
+.toggle-card.is-active .switch-indicator::after {
+  left: 14px;
+  background: var(--yellow);
+  box-shadow: 0 0 8px rgba(255, 208, 90, 0.6);
+}
+
+.action-button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 11px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  text-align: left;
+  color: var(--muted-strong);
+  border: 1px dashed rgba(128, 179, 200, 0.24);
+  border-radius: 10px;
+  background: rgba(4, 15, 22, 0.3);
+  cursor: pointer;
+  transition:
+    color 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.action-button:hover:not(:disabled) {
+  color: var(--text);
+  border-color: rgba(88, 231, 160, 0.32);
+  background: rgba(88, 231, 160, 0.05);
+}
+
+.action-icon {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: var(--green);
+  border-radius: 8px;
+  background: rgba(88, 231, 160, 0.08);
+}
+
+.action-icon svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.action-button strong,
+.action-button small {
+  display: block;
+}
+
+.action-button strong {
+  font-size: 10px;
+}
+
+.action-button small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.action-cost {
+  margin-left: auto;
+  color: var(--green);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.equation-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 11px;
+  padding: 10px 12px;
+  border-left: 2px solid rgba(70, 217, 255, 0.45);
+  background: linear-gradient(90deg, rgba(70, 217, 255, 0.055), transparent);
+}
+
+.equation-label {
+  color: var(--muted);
+  font-size: 8px;
+  white-space: nowrap;
+}
+
+.equation-card p {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+
+.equation-card small {
+  margin-left: auto;
+  color: rgba(143, 169, 183, 0.65);
+  font-size: 7px;
+  text-align: right;
+}
+
+.submit-button {
+  width: 100%;
+  margin-top: 13px;
+  justify-content: space-between;
+}
+
+.console-footnote {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 9px 0 0;
+  color: rgba(143, 169, 183, 0.55);
+  font-size: 7px;
+}
+
+.keyboard-key {
+  padding: 2px 5px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  font-family: var(--font-mono);
+}
+
+.keyboard-separator {
+  margin: 0 2px;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  overflow-y: auto;
+  place-items: center;
+  padding: 22px;
+  background: rgba(1, 7, 11, 0.76);
+  backdrop-filter: blur(12px);
+  animation: fadeIn 0.22s ease both;
+}
+
+.modal {
+  position: relative;
+  width: min(680px, 100%);
+  max-height: calc(100vh - 44px);
+  overflow-y: auto;
+  border: 1px solid rgba(133, 183, 203, 0.2);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(circle at 100% 0%, rgba(70, 217, 255, 0.08), transparent 34%),
+    #081923;
+  box-shadow: 0 35px 110px rgba(0, 0, 0, 0.58);
+  animation: modalIn 0.34s cubic-bezier(0.18, 0.84, 0.25, 1) both;
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 24px 25px 18px;
+  border-bottom: 1px solid var(--line);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.briefing-body {
+  display: grid;
+  grid-template-columns: 118px 1fr;
+  gap: 23px;
+  padding: 25px;
+}
+
+.briefing-visual {
+  position: relative;
+  display: grid;
+  min-height: 154px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(70, 217, 255, 0.15);
+  border-radius: 15px;
+  background:
+    linear-gradient(rgba(70, 217, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(70, 217, 255, 0.045) 1px, transparent 1px),
+    rgba(5, 18, 26, 0.64);
+  background-size: 18px 18px;
+}
+
+.briefing-visual span {
+  position: relative;
+  z-index: 2;
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 48px;
+  font-weight: 300;
+}
+
+.briefing-visual i {
+  position: absolute;
+  width: 95px;
+  height: 95px;
+  border: 1px dashed rgba(70, 217, 255, 0.18);
+  border-radius: 50%;
+  animation: scanRotate 14s linear infinite;
+}
+
+.briefing-visual::after {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  content: "";
+  border-radius: 50%;
+  background: rgba(70, 217, 255, 0.07);
+  filter: blur(8px);
+}
+
+.briefing-copy {
+  min-width: 0;
+}
+
+.briefing-copy > p {
+  margin: 0;
+  color: var(--muted-strong);
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.briefing-objective {
+  margin-top: 15px;
+  padding: 12px 14px;
+  color: var(--text);
+  font-size: 13px;
+  border-left: 2px solid var(--cyan);
+  background: rgba(70, 217, 255, 0.05);
+}
+
+.hint-box {
+  margin-top: 15px;
+}
+
+.hint-box span,
+.knowledge-reveal > span,
+.report-heading span,
+.report-body span {
+  color: var(--orange);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.1em;
+}
+
+.hint-box p {
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.75;
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 17px 25px 22px;
+  border-top: 1px solid var(--line);
+}
+
+.modal-footer > span {
+  color: rgba(143, 169, 183, 0.65);
+  font-family: var(--font-mono);
+  font-size: 8px;
+}
+
+.result-modal {
+  width: min(620px, 100%);
+  padding: 30px;
+  text-align: center;
+}
+
+.result-icon {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  margin: 0 auto 17px;
+  place-items: center;
+  color: #06131a;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 36px rgba(88, 231, 160, 0.23);
+}
+
+.result-icon.is-failed {
+  color: var(--text);
+  background: var(--red);
+  box-shadow: 0 0 36px rgba(255, 93, 108, 0.2);
+}
+
+.result-icon svg {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.result-modal h2 {
+  margin: 0;
+  font-size: 30px;
+}
+
+.result-modal > p:not(.panel-kicker) {
+  max-width: 460px;
+  margin: 10px auto 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.result-score-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.result-score-row > div {
+  padding: 14px 10px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: rgba(3, 14, 20, 0.36);
+}
+
+.result-score-row span,
+.result-score-row strong {
+  display: block;
+}
+
+.result-score-row span {
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.result-score-row strong {
+  margin-top: 7px;
+  font-family: var(--font-mono);
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.knowledge-reveal {
+  margin-top: 16px;
+  padding: 15px 17px;
+  text-align: left;
+  border-left: 2px solid var(--orange);
+  background: rgba(255, 117, 70, 0.05);
+}
+
+.knowledge-reveal p {
+  margin: 6px 0 0;
+  color: var(--muted-strong);
+  font-size: 11px;
+  line-height: 1.75;
+}
+
+.result-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.formula-modal {
+  width: min(850px, 100%);
+}
+
+.formula-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  background: var(--line);
+}
+
+.formula-grid article {
+  padding: 22px;
+  background: #081923;
+}
+
+.formula-grid article > span {
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+}
+
+.formula-grid p {
+  margin: 9px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.75;
+}
+
+.formula-grid .formula {
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 17px;
+}
+
+.formula-note {
+  grid-column: span 2;
+  background:
+    linear-gradient(90deg, rgba(70, 217, 255, 0.055), transparent),
+    #071720 !important;
+}
+
+.pause-modal {
+  width: min(480px, 100%);
+  padding: 34px;
+  text-align: center;
+}
+
+.pause-modal h2 {
+  margin: 0;
+  font-size: 27px;
+}
+
+.pause-modal > p:not(.panel-kicker) {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.75;
+}
+
+.pause-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 23px;
+}
+
+.report-modal {
+  width: min(830px, 100%);
+}
+
+.report-table {
+  padding: 12px 25px 18px;
+}
+
+.report-row {
+  display: grid;
+  grid-template-columns: 40px minmax(120px, 1fr) repeat(3, minmax(80px, auto));
+  gap: 14px;
+  align-items: center;
+  padding: 12px 0;
+  color: var(--muted-strong);
+  border-bottom: 1px solid var(--line);
+  font-size: 10px;
+}
+
+.report-row:first-child {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 8px;
+}
+
+.report-row span:nth-child(n + 3) {
+  text-align: right;
+  font-family: var(--font-mono);
+}
+
+.report-index {
+  color: var(--cyan);
+  font-family: var(--font-mono);
+}
+
+.toast {
+  position: fixed;
+  right: 25px;
+  bottom: 25px;
+  z-index: 60;
+  max-width: min(360px, calc(100vw - 40px));
+  padding: 11px 14px;
+  color: var(--text);
+  font-size: 11px;
+  border: 1px solid rgba(70, 217, 255, 0.22);
+  border-radius: 9px;
+  background: rgba(8, 25, 36, 0.94);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(12px);
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.toast.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.settlement-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  overflow: hidden auto;
+  place-items: center;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(31, 145, 181, 0.18), transparent 31%),
+    radial-gradient(circle at 50% 40%, rgba(255, 117, 70, 0.09), transparent 54%),
+    #02090e;
+}
+
+.settlement-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.45;
+  background-image:
+    linear-gradient(rgba(85, 154, 180, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(85, 154, 180, 0.08) 1px, transparent 1px);
+  background-size: 54px 54px;
+  mask-image: radial-gradient(circle at 50% 44%, black, transparent 75%);
+}
+
+.settlement-beam {
+  position: absolute;
+  top: -60%;
+  left: 50%;
+  width: 1px;
+  height: 130%;
+  background: linear-gradient(transparent, rgba(70, 217, 255, 0.5), transparent);
+  box-shadow: 0 0 80px 20px rgba(70, 217, 255, 0.07);
+  transform: rotate(24deg);
+}
+
+.settlement-orbit {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border: 1px solid rgba(70, 217, 255, 0.12);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.orbit-a {
+  width: min(770px, 80vw);
+  height: min(770px, 80vw);
+  border-style: dashed;
+  animation: orbitSpin 28s linear infinite;
+}
+
+.orbit-b {
+  width: min(1050px, 110vw);
+  height: min(1050px, 110vw);
+  border-color: rgba(255, 117, 70, 0.08);
+  animation: orbitSpin 40s linear infinite reverse;
+}
+
+#settlementCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.settlement-content {
+  position: relative;
+  z-index: 3;
+  width: min(790px, calc(100% - 34px));
+  margin: 36px auto;
+  text-align: center;
+}
+
+.settlement-kicker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  color: var(--cyan);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  opacity: 0;
+  animation: revealUp 0.7s 0.1s ease forwards;
+}
+
+.settlement-kicker span {
+  width: 26px;
+  height: 1px;
+  background: rgba(70, 217, 255, 0.5);
+}
+
+.settlement-content > h2 {
+  margin: 16px 0 0;
+  font-size: clamp(34px, 5vw, 56px);
+  letter-spacing: 0.02em;
+  opacity: 0;
+  animation: revealUp 0.7s 0.25s ease forwards;
+}
+
+.settlement-content > p {
+  margin: 9px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  opacity: 0;
+  animation: revealUp 0.7s 0.4s ease forwards;
+}
+
+.settlement-score-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(28px, 7vw, 82px);
+  margin: clamp(26px, 4vh, 45px) 0 0;
+}
+
+.grade-ring {
+  position: relative;
+  display: grid;
+  width: clamp(150px, 18vw, 205px);
+  height: clamp(150px, 18vw, 205px);
+  place-items: center;
+  border: 1px solid rgba(70, 217, 255, 0.33);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, rgba(70, 217, 255, 0.15), transparent 64%),
+    rgba(4, 17, 24, 0.5);
+  box-shadow:
+    0 0 50px rgba(70, 217, 255, 0.08),
+    inset 0 0 40px rgba(70, 217, 255, 0.06);
+  opacity: 0;
+  transform: scale(0.62) rotate(-25deg);
+  animation: gradeReveal 1.1s 1.25s cubic-bezier(0.18, 0.88, 0.24, 1.12) forwards;
+}
+
+.grade-ring::before,
+.grade-ring::after {
+  position: absolute;
+  content: "";
+  border: 1px dashed rgba(70, 217, 255, 0.2);
+  border-radius: inherit;
+}
+
+.grade-ring::before {
+  inset: 9px;
+  animation: orbitSpin 18s linear infinite;
+}
+
+.grade-ring::after {
+  inset: -13px;
+  border-color: rgba(255, 117, 70, 0.13);
+  animation: orbitSpin 25s linear infinite reverse;
+}
+
+.grade-letter {
+  position: relative;
+  z-index: 2;
+  color: var(--cyan);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(85px, 11vw, 126px);
+  line-height: 0.84;
+  text-shadow: 0 0 30px rgba(70, 217, 255, 0.22);
+}
+
+.grade-label {
+  position: absolute;
+  bottom: 24px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.15em;
+}
+
+.score-copy {
+  min-width: 190px;
+  text-align: left;
+  opacity: 0;
+  animation: revealUp 0.8s 1.45s ease forwards;
+}
+
+.score-copy > span {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.score-copy > strong {
+  display: block;
+  margin-top: 5px;
+  font-family: var(--font-mono);
+  font-size: clamp(56px, 7vw, 82px);
+  font-weight: 300;
+  line-height: 1;
+}
+
+.score-copy small {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.score-copy p {
+  margin: 8px 0 0;
+  color: var(--green);
+  font-size: 11px;
+}
+
+.settlement-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: clamp(30px, 4.5vh, 46px);
+  opacity: 0;
+  animation: revealUp 0.75s 1.75s ease forwards;
+}
+
+.settlement-metrics article {
+  padding: 14px 16px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(4, 18, 25, 0.46);
+}
+
+.settlement-metrics article > span {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.settlement-metrics strong {
+  display: block;
+  margin: 7px 0 10px;
+  font-family: var(--font-mono);
+  font-size: 23px;
+  font-weight: 400;
+}
+
+.settlement-metrics small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.settlement-metrics i {
+  display: block;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(128, 175, 194, 0.12);
+}
+
+.settlement-metrics i > span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--cyan), var(--green));
+  transition: width 1.1s 2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.settlement-report {
+  margin-top: 11px;
+  overflow: hidden;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(4, 18, 25, 0.46);
+  opacity: 0;
+  animation: revealUp 0.75s 2s ease forwards;
+}
+
+.report-heading {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.report-heading span:last-child {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 8px;
+}
+
+.report-body {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.report-body > div {
+  padding: 13px 15px;
+}
+
+.report-body > div + div {
+  border-left: 1px solid var(--line);
+}
+
+.report-body p {
+  margin: 5px 0 0;
+  color: var(--muted-strong);
+  font-size: 10px;
+  line-height: 1.65;
+}
+
+.settlement-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+  opacity: 0;
+  animation: revealUp 0.7s 2.35s ease forwards;
+}
+
+.skip-animation {
+  position: fixed;
+  right: 24px;
+  bottom: 20px;
+  padding: 7px;
+  color: var(--muted);
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 9px;
+}
+
+.settlement-screen.is-skipped *,
+.settlement-screen.is-skipped *::before,
+.settlement-screen.is-skipped *::after {
+  animation-delay: 0s !important;
+  animation-duration: 0.01ms !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+@keyframes ambientDriftA {
+  to { transform: translate(-8vw, 6vh) scale(1.16); }
+}
+
+@keyframes ambientDriftB {
+  to { transform: translate(9vw, -5vh) scale(0.9); }
+}
+
+@keyframes screenIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulseDot {
+  50% { opacity: 0.55; transform: scale(0.84); }
+}
+
+@keyframes tubePulse {
+  50% { stroke: rgba(143, 238, 255, 0.9); }
+}
+
+@keyframes scanRotate {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes floatReadout {
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes scanDown {
+  from { top: -15%; }
+  to { top: 105%; }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes revealUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes gradeReveal {
+  0% { opacity: 0; transform: scale(0.62) rotate(-25deg); }
+  68% { opacity: 1; transform: scale(1.08) rotate(3deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+@keyframes orbitSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes warmShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+@media (max-width: 1180px) {
+  .hero-grid {
+    grid-template-columns: minmax(0, 0.9fr) minmax(430px, 1.1fr);
+    gap: 30px;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(68px, 9vw, 106px);
+  }
+
+  .hero-visual {
+    min-height: 500px;
+  }
+
+  .control-grid {
+    grid-template-columns: minmax(0, 1.25fr) minmax(350px, 0.75fr);
+  }
+
+  .telemetry-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .equation-card small {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .app-shell {
+    padding: 17px;
+  }
+
+  .hero-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+    padding-top: 50px;
+  }
+
+  .hero-copy {
+    max-width: 650px;
+  }
+
+  .hero-visual {
+    min-height: 440px;
+  }
+
+  .game-header {
+    grid-template-columns: 1fr auto;
+  }
+
+  .mission-progress {
+    grid-row: 2;
+    grid-column: 1 / -1;
+  }
+
+  .mission-strip {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .mission-objective {
+    grid-row: 2;
+    grid-column: 2 / -1;
+    justify-self: start;
+  }
+
+  .control-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .console-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 20px;
+  }
+
+  .console-panel > .panel-heading,
+  .console-panel > .objective-card,
+  .console-panel > .control-stack,
+  .console-panel > .configuration-row,
+  .console-panel > .action-button,
+  .console-panel > .equation-card,
+  .console-panel > .submit-button,
+  .console-panel > .console-footnote {
+    grid-column: 1 / -1;
+  }
+
+  .control-stack {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 680px) {
+  .app-shell {
+    padding: 14px;
+  }
+
+  .system-state {
+    display: none;
+  }
+
+  .hero-grid {
+    padding-top: 38px;
+  }
+
+  .hero-copy h1 {
+    font-size: clamp(63px, 22vw, 94px);
+  }
+
+  .hero-copy h1 span {
+    margin-left: 0.32em;
+  }
+
+  .hero-subtitle {
+    font-size: 18px;
+  }
+
+  .hero-description {
+    font-size: 13px;
+  }
+
+  .hero-facts {
+    margin-top: 37px;
+  }
+
+  .hero-visual {
+    min-height: 340px;
+    margin: 0 -13px;
+  }
+
+  .floating-readout {
+    min-width: 120px;
+    padding: 9px 10px;
+  }
+
+  .floating-readout strong {
+    font-size: 16px;
+  }
+
+  .floating-readout-a {
+    top: 13%;
+  }
+
+  .floating-readout-b {
+    bottom: 17%;
+  }
+
+  .start-footer span:last-child {
+    display: none;
+  }
+
+  .game-header {
+    gap: 13px;
+  }
+
+  .header-actions .icon-button:first-child {
+    display: none;
+  }
+
+  .mission-strip {
+    grid-template-columns: auto 1fr;
+    gap: 13px;
+    padding: 17px 0;
+  }
+
+  .mission-number {
+    padding-right: 14px;
+  }
+
+  .mission-title-wrap h2 {
+    font-size: 17px;
+  }
+
+  .mission-objective {
+    grid-column: 1 / -1;
+  }
+
+  #restartMissionBtn {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+  }
+
+  .plant-panel,
+  .console-panel {
+    padding: 14px;
+  }
+
+  .canvas-wrap,
+  #exchangerCanvas {
+    min-height: 280px;
+  }
+
+  .telemetry-grid {
+    gap: 7px;
+  }
+
+  .telemetry {
+    padding: 10px;
+  }
+
+  .telemetry-value strong {
+    font-size: 21px;
+  }
+
+  .control-stack {
+    grid-template-columns: 1fr;
+  }
+
+  .configuration-row {
+    grid-template-columns: 1fr;
+  }
+
+  .segment-control {
+    justify-content: stretch;
+  }
+
+  .segment-btn {
+    flex: 1;
+  }
+
+  .modal-backdrop {
+    padding: 10px;
+  }
+
+  .modal {
+    max-height: calc(100vh - 20px);
+    border-radius: 18px;
+  }
+
+  .briefing-body {
+    grid-template-columns: 72px 1fr;
+    gap: 15px;
+    padding: 19px;
+  }
+
+  .briefing-visual {
+    min-height: 120px;
+  }
+
+  .briefing-visual span {
+    font-size: 34px;
+  }
+
+  .modal-header {
+    padding: 19px;
+  }
+
+  .modal-footer {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 15px 19px 19px;
+  }
+
+  .modal-footer .button {
+    width: 100%;
+  }
+
+  .result-modal {
+    padding: 22px 17px;
+  }
+
+  .result-score-row {
+    gap: 5px;
+  }
+
+  .result-score-row strong {
+    font-size: 14px;
+  }
+
+  .result-actions,
+  .pause-actions,
+  .settlement-actions {
+    flex-direction: column;
+  }
+
+  .formula-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .formula-note {
+    grid-column: auto;
+  }
+
+  .settlement-content {
+    margin: 26px auto;
+  }
+
+  .settlement-score-wrap {
+    gap: 22px;
+  }
+
+  .grade-ring {
+    width: 142px;
+    height: 142px;
+  }
+
+  .grade-label {
+    bottom: 18px;
+  }
+
+  .score-copy {
+    min-width: 0;
+  }
+
+  .settlement-metrics {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .settlement-metrics article {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+  }
+
+  .settlement-metrics strong {
+    margin: 0;
+  }
+
+  .settlement-metrics i {
+    grid-column: 1 / -1;
+    margin-top: 7px;
+  }
+
+  .report-body {
+    grid-template-columns: 1fr;
+  }
+
+  .report-body > div + div {
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+
+  .report-row {
+    grid-template-columns: 32px 1fr repeat(2, 55px);
+    gap: 8px;
+  }
+
+  .report-row span:nth-child(3) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+</style>
+</head>
+<body>
+  <div class="ambient ambient-a" aria-hidden="true"></div>
+  <div class="ambient ambient-b" aria-hidden="true"></div>
+  <div class="noise" aria-hidden="true"></div>
+
+  <main id="app" class="app-shell">
+    <section id="startScreen" class="start-screen" aria-labelledby="gameTitle">
+      <header class="brand-row">
+        <div class="brand-mark" aria-hidden="true">
+          <span class="brand-core"></span>
+          <span class="brand-orbit"></span>
+        </div>
+        <div>
+          <p class="eyebrow">CHEMICAL ENGINEERING · CHAPTER 04</p>
+          <p class="brand-name">热流指挥部</p>
+        </div>
+        <div class="system-state">
+          <span class="state-dot"></span>
+          <span>系统待命</span>
+        </div>
+      </header>
+
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <div class="chapter-pill">
+            <span>化工原理 A(I)</span>
+            <span class="pill-divider"></span>
+            <span>换热器与传热强化</span>
+          </div>
+          <h1 id="gameTitle">
+            热流
+            <span>指挥官</span>
+          </h1>
+          <p class="hero-subtitle">换热站危机</p>
+          <p class="hero-description">
+            热浪正在逼近。你是夜班值守工程师，需要在温度、泵耗与设备状态之间做出判断，
+            让这套换热系统安全完成五次生产任务。
+          </p>
+          <div class="hero-actions">
+            <button id="startBtn" class="button button-primary button-large" type="button">
+              <span>进入中控室</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6"></path>
+              </svg>
+            </button>
+            <button id="startHelpBtn" class="button button-quiet" type="button">
+              操作说明
+            </button>
+          </div>
+          <dl class="hero-facts" aria-label="游戏信息">
+            <div>
+              <dt>05</dt>
+              <dd>生产任务</dd>
+            </div>
+            <div>
+              <dt>100%</dt>
+              <dd>离线运行</dd>
+            </div>
+            <div>
+              <dt>φ</dt>
+              <dd>传热模型驱动</dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="hero-visual" aria-label="换热器动态示意">
+          <div class="hero-visual-grid" aria-hidden="true"></div>
+          <div class="thermal-orb thermal-orb-hot" aria-hidden="true"></div>
+          <div class="thermal-orb thermal-orb-cold" aria-hidden="true"></div>
+          <svg class="hero-exchanger" viewBox="0 0 720 480" role="img" aria-label="管壳式换热器结构示意">
+            <defs>
+              <linearGradient id="shellGlow" x1="0" x2="1">
+                <stop offset="0" stop-color="#ff7445" stop-opacity=".12"></stop>
+                <stop offset=".5" stop-color="#ff7445" stop-opacity=".52"></stop>
+                <stop offset="1" stop-color="#42d9ff" stop-opacity=".12"></stop>
+              </linearGradient>
+              <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#284352"></stop>
+                <stop offset=".48" stop-color="#112733"></stop>
+                <stop offset="1" stop-color="#071820"></stop>
+              </linearGradient>
+              <filter id="softGlow">
+                <feGaussianBlur stdDeviation="8" result="blur"></feGaussianBlur>
+                <feMerge>
+                  <feMergeNode in="blur"></feMergeNode>
+                  <feMergeNode in="SourceGraphic"></feMergeNode>
+                </feMerge>
+              </filter>
+            </defs>
+
+            <g class="hero-pipes" fill="none" stroke-width="18" stroke-linecap="round">
+              <path class="pipe-hot" d="M20 162 H128"></path>
+              <path class="pipe-cold" d="M20 336 H176"></path>
+              <path class="pipe-hot" d="M590 336 H700"></path>
+              <path class="pipe-cold" d="M544 162 H700"></path>
+            </g>
+
+            <rect x="110" y="112" width="500" height="272" rx="38" fill="url(#metal)" stroke="#446172"></rect>
+            <rect x="110" y="112" width="500" height="272" rx="38" fill="url(#shellGlow)" opacity=".8"></rect>
+
+            <g class="baffles" fill="none" stroke="#446172" stroke-width="4">
+              <path d="M190 112 V272 Q190 304 222 304 H250"></path>
+              <path d="M270 384 V224 Q270 192 302 192 H330"></path>
+              <path d="M350 112 V272 Q350 304 382 304 H410"></path>
+              <path d="M430 384 V224 Q430 192 462 192 H490"></path>
+              <path d="M510 112 V272 Q510 304 542 304 H560"></path>
+            </g>
+
+            <g class="hero-tubes" fill="none" stroke-width="7" stroke-linecap="round">
+              <path d="M166 166 H556"></path>
+              <path d="M166 208 H556"></path>
+              <path d="M166 250 H556"></path>
+              <path d="M166 292 H556"></path>
+              <path d="M166 334 H556"></path>
+            </g>
+
+            <g class="scan-ring" fill="none" filter="url(#softGlow)">
+              <circle cx="360" cy="248" r="74" stroke="#41dcff" stroke-opacity=".22"></circle>
+              <circle cx="360" cy="248" r="112" stroke="#ff7546" stroke-opacity=".16"></circle>
+            </g>
+
+            <g class="hero-readout" font-family="ui-monospace, monospace">
+              <text x="42" y="130" fill="#ff956f" font-size="17" letter-spacing="2">HOT IN · 125°C</text>
+              <text x="42" y="307" fill="#68ddff" font-size="17" letter-spacing="2">COLD IN · 25°C</text>
+              <text x="617" y="307" fill="#ff956f" font-size="17" letter-spacing="2">HOT OUT</text>
+              <text x="617" y="130" fill="#68ddff" font-size="17" letter-spacing="2">COLD OUT</text>
+            </g>
+
+            <g class="hero-sensor" font-family="ui-monospace, monospace" font-size="14">
+              <rect x="288" y="398" width="144" height="38" rx="19" fill="#081820" stroke="#33505e"></rect>
+              <circle cx="310" cy="417" r="5" fill="#57e59a"></circle>
+              <text x="324" y="422" fill="#9cb7c5" letter-spacing="1.4">LIVE MODEL</text>
+            </g>
+          </svg>
+
+          <div class="floating-readout floating-readout-a">
+            <span>传热速率 Q</span>
+            <strong>184.2 <small>kW</small></strong>
+          </div>
+          <div class="floating-readout floating-readout-b">
+            <span>冷流体出口</span>
+            <strong>69.1 <small>°C</small></strong>
+          </div>
+          <div class="visual-caption">
+            <span class="live-dot"></span>
+            <span>实时传热场预览</span>
+          </div>
+        </div>
+      </div>
+
+      <footer class="start-footer">
+        <span>KB-04 热交换站</span>
+        <span>温度 · 能耗 · 安全</span>
+        <span>零依赖离线源码</span>
+      </footer>
+    </section>
+
+    <section id="gameScreen" class="game-screen" hidden aria-label="游戏主界面">
+      <header class="game-header">
+        <div class="game-brand">
+          <div class="mini-mark" aria-hidden="true"><span></span></div>
+          <div>
+            <p>KB-04 / 热交换站</p>
+            <strong>热流指挥官</strong>
+          </div>
+        </div>
+
+        <div class="mission-progress" aria-label="任务进度">
+          <div class="progress-copy">
+            <span id="missionCounter">任务 01 / 05</span>
+            <span id="progressPercent">0%</span>
+          </div>
+          <div class="progress-track" aria-hidden="true">
+            <span id="progressBar"></span>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button id="soundBtn" class="icon-button" type="button" aria-label="关闭声音">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M11 5 6 9H3v6h3l5 4V5Z"></path>
+              <path d="M15 9a4 4 0 0 1 0 6"></path>
+              <path d="M18 6a8 8 0 0 1 0 12"></path>
+            </svg>
+          </button>
+          <button id="formulaBtn" class="icon-button" type="button" aria-label="打开知识手册">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11v16H6.5A2.5 2.5 0 0 0 4 21.5V5.5Z"></path>
+              <path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H13v16h4.5a2.5 2.5 0 0 1 2.5 2.5V5.5Z"></path>
+            </svg>
+          </button>
+          <button id="pauseBtn" class="icon-button" type="button" aria-label="暂停游戏">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 5v14M16 5v14"></path>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="mission-strip">
+        <div class="mission-number">
+          <span>MISSION</span>
+          <strong id="missionNumber">01</strong>
+        </div>
+        <div class="mission-title-wrap">
+          <p id="missionLabel">稳态启动</p>
+          <h2 id="missionTitle">让热量找到正确的方向</h2>
+        </div>
+        <div id="missionObjective" class="mission-objective">
+          冷流体出口温度 ≥ 66°C
+        </div>
+        <button id="restartMissionBtn" class="button button-quiet button-small" type="button">
+          重置本关
+        </button>
+      </div>
+
+      <div class="control-grid">
+        <section class="panel plant-panel" aria-labelledby="plantTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">LIVE THERMAL FIELD</p>
+              <h3 id="plantTitle">换热器实时剖面</h3>
+            </div>
+            <div id="systemStatus" class="status-chip status-running">
+              <span></span>
+              运行中
+            </div>
+          </div>
+
+          <div class="canvas-wrap">
+            <canvas id="exchangerCanvas" aria-label="换热器流体与温度动态示意"></canvas>
+            <div id="scanOverlay" class="scan-overlay" hidden>
+              <div class="scan-line"></div>
+              <span>正在校核传热模型</span>
+            </div>
+            <div class="flow-legend" aria-hidden="true">
+              <span><i class="legend-hot"></i>热流体</span>
+              <span><i class="legend-cold"></i>冷流体</span>
+              <span><i class="legend-heat"></i>热流密度</span>
+            </div>
+          </div>
+
+          <div class="telemetry-grid">
+            <article class="telemetry telemetry-primary">
+              <div class="telemetry-label">
+                <span>冷流体出口</span>
+                <span id="tempRangeLabel">目标区间</span>
+              </div>
+              <div class="telemetry-value">
+                <strong id="coldOutValue">69.1</strong>
+                <span>°C</span>
+              </div>
+              <div class="target-gauge" aria-hidden="true">
+                <span id="coldOutGauge"></span>
+                <i id="targetZone"></i>
+              </div>
+            </article>
+            <article class="telemetry">
+              <span class="telemetry-label">传热速率 Q</span>
+              <div class="telemetry-value">
+                <strong id="heatValue">184.2</strong>
+                <span>kW</span>
+              </div>
+              <p id="heatTrend">能量正在传递</p>
+            </article>
+            <article class="telemetry">
+              <span class="telemetry-label">泵耗 P</span>
+              <div class="telemetry-value">
+                <strong id="pumpValue">11.1</strong>
+                <span>kW</span>
+              </div>
+              <p id="pumpLimit">上限 13.0 kW</p>
+            </article>
+            <article class="telemetry">
+              <span class="telemetry-label">总传热系数 K</span>
+              <div class="telemetry-value">
+                <strong id="kValue">4.65</strong>
+                <span>kW/K</span>
+              </div>
+              <p id="foulingState">污垢热阻 5%</p>
+            </article>
+          </div>
+        </section>
+
+        <aside class="panel console-panel" aria-labelledby="consoleTitle">
+          <div class="panel-heading compact">
+            <div>
+              <p class="panel-kicker">SHIFT CONSOLE</p>
+              <h3 id="consoleTitle">运行控制台</h3>
+            </div>
+            <div class="console-timer">
+              <span>SHIFT</span>
+              <strong>04-N</strong>
+            </div>
+          </div>
+
+          <div class="objective-card">
+            <div class="objective-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="8"></circle>
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path>
+              </svg>
+            </div>
+            <div>
+              <span>当前目标</span>
+              <strong id="consoleObjective">达到冷流体出口温度要求</strong>
+            </div>
+          </div>
+
+          <div class="control-stack">
+            <label class="range-control" for="hotFlow">
+              <span class="range-heading">
+                <span>热流体流量 <em>m<sub>h</sub></em></span>
+                <output id="hotFlowOutput">1.20 kg/s</output>
+              </span>
+              <input id="hotFlow" type="range" min="0.5" max="1.6" step="0.01" value="1.2">
+              <span class="range-bounds"><i>0.50</i><i>1.60</i></span>
+            </label>
+
+            <label class="range-control" for="coldFlow">
+              <span class="range-heading">
+                <span>冷流体流量 <em>m<sub>c</sub></em></span>
+                <output id="coldFlowOutput">1.00 kg/s</output>
+              </span>
+              <input id="coldFlow" type="range" min="0.5" max="1.8" step="0.01" value="1">
+              <span class="range-bounds"><i>0.50</i><i>1.80</i></span>
+            </label>
+
+            <label class="range-control" for="areaFactor">
+              <span class="range-heading">
+                <span>有效换热面积 <em>A</em></span>
+                <output id="areaOutput">100%</output>
+              </span>
+              <input id="areaFactor" type="range" min="0.7" max="1.3" step="0.01" value="1">
+              <span class="range-bounds"><i>70%</i><i>130%</i></span>
+            </label>
+          </div>
+
+          <div class="configuration-row">
+            <div class="segment-control" aria-label="流体流向">
+              <button id="parallelBtn" class="segment-btn" type="button" aria-pressed="false">
+                并流
+              </button>
+              <button id="counterBtn" class="segment-btn is-active" type="button" aria-pressed="true">
+                逆流
+              </button>
+            </div>
+            <button id="turbulatorBtn" class="toggle-card" type="button" aria-pressed="false">
+              <span class="toggle-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M4 8c3-4 6 4 9 0s5 2 7 0M4 16c3-4 6 4 9 0s5 2 7 0"></path>
+                </svg>
+              </span>
+              <span>
+                <strong>强化传热</strong>
+                <small>提高 K，增加泵耗</small>
+              </span>
+              <i class="switch-indicator"></i>
+            </button>
+          </div>
+
+          <button id="cleanBtn" class="action-button" type="button">
+            <span class="action-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24">
+                <path d="M4 20h16M7 16l2-8h6l2 8M9 8V4h6v4"></path>
+                <path d="M10 12h4"></path>
+              </svg>
+            </span>
+            <span>
+              <strong>在线清洗</strong>
+              <small id="cleanHint">降低污垢热阻</small>
+            </span>
+            <span id="cleanCount" class="action-cost">× 1</span>
+          </button>
+
+          <div class="equation-card">
+            <span class="equation-label">能量平衡</span>
+            <p><i>Q</i> = <i>K A</i> Δ<i>T</i><sub>m</sub></p>
+            <small>强化传热与泵耗需要同时权衡</small>
+          </div>
+
+          <button id="submitBtn" class="button button-primary submit-button" type="button">
+            <span>提交运行方案</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6"></path>
+            </svg>
+          </button>
+
+          <p class="console-footnote">
+            <span class="keyboard-key">Enter</span>
+            提交方案
+            <span class="keyboard-separator">·</span>
+            所有参数实时生效
+          </p>
+        </aside>
+      </div>
+    </section>
+
+    <section id="settlementScreen" class="settlement-screen" hidden aria-labelledby="settlementTitle">
+      <div class="settlement-grid" aria-hidden="true"></div>
+      <div class="settlement-orbit orbit-a" aria-hidden="true"></div>
+      <div class="settlement-orbit orbit-b" aria-hidden="true"></div>
+      <div class="settlement-beam" aria-hidden="true"></div>
+      <canvas id="settlementCanvas" aria-hidden="true"></canvas>
+
+      <div class="settlement-content">
+        <div class="settlement-kicker">
+          <span></span>
+          SHIFT PERFORMANCE REPORT
+          <span></span>
+        </div>
+        <h2 id="settlementTitle">换热任务完成</h2>
+        <p id="settlementSubtitle">正在汇集本次值班的全部热流数据</p>
+
+        <div class="settlement-score-wrap">
+          <div class="grade-ring" id="gradeRing">
+            <span class="grade-letter" id="gradeLetter">A</span>
+            <span class="grade-label">综合评级</span>
+          </div>
+          <div class="score-copy">
+            <span>运行评分</span>
+            <strong>
+              <span id="finalScore">0</span>
+              <small>/ 100</small>
+            </strong>
+            <p id="gradeComment">稳定、克制、判断准确。</p>
+          </div>
+        </div>
+
+        <div class="settlement-metrics">
+          <article>
+            <span>温度达标</span>
+            <strong><span id="tempScore">0</span><small>%</small></strong>
+            <i><span id="tempMetricBar"></span></i>
+          </article>
+          <article>
+            <span>能源利用</span>
+            <strong><span id="energyScore">0</span><small>%</small></strong>
+            <i><span id="energyMetricBar"></span></i>
+          </article>
+          <article>
+            <span>原理掌握</span>
+            <strong><span id="principleScore">0</span><small>%</small></strong>
+            <i><span id="principleMetricBar"></span></i>
+          </article>
+        </div>
+
+        <div class="settlement-report">
+          <div class="report-heading">
+            <span>运行报告</span>
+            <span id="reportSerial">RPT-KB04-001</span>
+          </div>
+          <div class="report-body">
+            <div>
+              <span>最佳决策</span>
+              <p id="bestDecision">通过逆流布置提高了平均传热温差。</p>
+            </div>
+            <div>
+              <span>节能空间</span>
+              <p id="improvementText">继续关注高流量带来的泵耗增长。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="settlement-actions">
+          <button id="replayBtn" class="button button-quiet" type="button">
+            再运行一次
+          </button>
+          <button id="viewReportBtn" class="button button-primary" type="button">
+            查看完整记录
+          </button>
+        </div>
+        <button id="skipSettlementBtn" class="skip-animation" type="button">
+          跳过动画
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <div id="modalBackdrop" class="modal-backdrop" hidden>
+    <section id="briefingModal" class="modal briefing-modal" role="dialog" aria-modal="true" aria-labelledby="briefingTitle">
+      <header class="modal-header">
+        <div>
+          <p id="briefingEyebrow" class="panel-kicker">MISSION BRIEFING</p>
+          <h2 id="briefingTitle">稳态启动</h2>
+        </div>
+        <button id="briefingCloseBtn" class="modal-close" type="button" aria-label="关闭任务简报">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+        </button>
+      </header>
+      <div class="briefing-body">
+        <div class="briefing-visual" aria-hidden="true">
+          <span id="briefingNumber">01</span>
+          <i></i>
+        </div>
+        <div class="briefing-copy">
+          <p id="briefingScenario"></p>
+          <div id="briefingObjective" class="briefing-objective"></div>
+          <div class="hint-box">
+            <span>工程师提示</span>
+            <p id="briefingHint"></p>
+          </div>
+        </div>
+      </div>
+      <footer class="modal-footer">
+        <span id="briefingFormula">换热器 · 传热过程 · 能量平衡</span>
+        <button id="briefingStartBtn" class="button button-primary" type="button">
+          开始调节
+        </button>
+      </footer>
+    </section>
+
+    <section id="resultModal" class="modal result-modal" role="dialog" aria-modal="true" aria-labelledby="resultTitle">
+      <div id="resultIcon" class="result-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="m5 13 4 4L19 7"></path></svg>
+      </div>
+      <p id="resultEyebrow" class="panel-kicker">SHIFT VERIFIED</p>
+      <h2 id="resultTitle">任务完成</h2>
+      <p id="resultDescription"></p>
+      <div class="result-score-row">
+        <div>
+          <span>本关评分</span>
+          <strong id="resultScore">92</strong>
+        </div>
+        <div>
+          <span>冷流体出口</span>
+          <strong id="resultTemp">70.2°C</strong>
+        </div>
+        <div>
+          <span>泵耗</span>
+          <strong id="resultPump">10.4kW</strong>
+        </div>
+      </div>
+      <div class="knowledge-reveal">
+        <span>本关原理</span>
+        <p id="resultTheory"></p>
+      </div>
+      <div class="result-actions">
+        <button id="retryBtn" class="button button-quiet" type="button">重新调节</button>
+        <button id="nextBtn" class="button button-primary" type="button">进入下一任务</button>
+      </div>
+    </section>
+
+    <section id="formulaModal" class="modal formula-modal" role="dialog" aria-modal="true" aria-labelledby="formulaTitle">
+      <header class="modal-header">
+        <div>
+          <p class="panel-kicker">CHAPTER 04 · QUICK REFERENCE</p>
+          <h2 id="formulaTitle">换热站知识手册</h2>
+        </div>
+        <button class="modal-close formula-close" type="button" aria-label="关闭知识手册">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+        </button>
+      </header>
+      <div class="formula-grid">
+        <article>
+          <span>01 / 热量守恒</span>
+          <p class="formula">Q = m<sub>h</sub>c<sub>p,h</sub>(T<sub>h,in</sub> − T<sub>h,out</sub>)</p>
+          <p>热流体释放的热量，等于冷流体吸收的热量。</p>
+        </article>
+        <article>
+          <span>02 / 传热速率</span>
+          <p class="formula">Q = K A ΔT<sub>m</sub></p>
+          <p>提高温差、面积或总传热系数，都能增强换热能力。</p>
+        </article>
+        <article>
+          <span>03 / 流向选择</span>
+          <p class="formula">逆流 &gt; 并流</p>
+          <p>逆流的平均传热温差通常更大，在相同条件下更有利于升温。</p>
+        </article>
+        <article>
+          <span>04 / 污垢热阻</span>
+          <p class="formula">K↓ → Q↓</p>
+          <p>污垢热阻增大，总传热系数下降，需清洗或调整运行参数。</p>
+        </article>
+        <article>
+          <span>05 / 强化传热</span>
+          <p class="formula">K↑，但 P↑</p>
+          <p>扰流强化会增加流动阻力，性能评价必须兼顾泵耗。</p>
+        </article>
+        <article class="formula-note">
+          <span>游戏模型说明</span>
+          <p>
+            页面采用 ε-NTU 关系求解冷热流体出口温度，再结合流量、污垢、强化传热与泵耗，
+            实时计算任务指标。它是教学简化模型，不替代工程设计计算。
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section id="pauseModal" class="modal pause-modal" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
+      <p class="panel-kicker">CONTROL ROOM PAUSED</p>
+      <h2 id="pauseTitle">中控室已暂停</h2>
+      <p>热流模型已冻结。你可以继续值班，或重新开始全部任务。</p>
+      <div class="pause-actions">
+        <button id="continueBtn" class="button button-primary" type="button">继续值守</button>
+        <button id="pauseRestartBtn" class="button button-quiet" type="button">重新开始游戏</button>
+      </div>
+    </section>
+
+    <section id="reportModal" class="modal report-modal" role="dialog" aria-modal="true" aria-labelledby="reportTitle">
+      <header class="modal-header">
+        <div>
+          <p class="panel-kicker">FINAL RUN RECORD</p>
+          <h2 id="reportTitle">完整运行记录</h2>
+        </div>
+        <button class="modal-close report-close" type="button" aria-label="关闭运行记录">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"></path></svg>
+        </button>
+      </header>
+      <div id="reportTable" class="report-table"></div>
+      <footer class="modal-footer">
+        <span>记录仅保存在当前页面，不会上传。</span>
+        <button id="reportReplayBtn" class="button button-primary" type="button">再运行一次</button>
+      </footer>
+    </section>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <div id="liveRegion" class="sr-only" aria-live="polite"></div>
+
+  <script>
+"use strict";
+
+/*
+ * 热流指挥官 · 换热站危机
+ * ------------------------------------------------------------
+ * 课程知识点：化工原理第四章第 4-5 课
+ * 1. 通过热量守恒与 ε-NTU 关系计算冷、热流体出口温度；
+ * 2. 用总面积、流量、污垢热阻和强化传热修正总传热系数；
+ * 3. 将泵耗纳入评价，体现“强化传热并非免费”的工程权衡。
+ *
+ * 该模型为教学简化模型，用于课堂互动，不替代工程设计计算。
+ */
+
+const PHYSICS = Object.freeze({
+  hotInlet: 125,
+  coldInlet: 25,
+  hotCp: 2.1,
+  coldCp: 4.18,
+  baseUa: 4.2,
+  pumpBase: 0.8,
+  pumpFlowFactor: 9.5,
+  pumpAreaFactor: 1.8,
+  pumpEnhancementCost: 2.2
+});
+
+const MISSIONS = [
+  {
+    id: 1,
+    label: "稳态启动",
+    title: "让热量找到正确的方向",
+    objective: "选择逆流布置，使冷流体出口达到 66–70°C",
+    shortObjective: "冷流体出口 66–70°C，并切换为逆流",
+    scenario:
+      "夜班刚接班，冷流体出口温度偏低。设备允许切换并流或逆流，但本班次不再调整流量和面积。先判断哪一种流向更适合升温。",
+    hint:
+      "比较冷热流体同向流动与反向流动时的平均传热温差。冷热端温差更均匀，通常意味着更大的传热推动力。",
+    formula: "逆流 · 平均温差 · 能量守恒",
+    init: {
+      hotFlow: 1.2,
+      coldFlow: 1,
+      area: 1,
+      fouling: 0.05,
+      enhancement: false,
+      counterflow: false
+    },
+    locked: ["hotFlow", "coldFlow", "area", "enhancement", "cleaning"],
+    target: {
+      minTemp: 66,
+      maxTemp: 70,
+      maxPump: 13.5,
+      requireCounterflow: true
+    },
+    theory:
+      "逆流时冷端和热端的温差更均匀，平均传热温差通常大于并流。因此在相同换热面积和流量下，冷流体更容易达到较高出口温度。",
+    bestDecision: "逆流布置扩大了有效平均传热温差。",
+    improvement: "设备固定时，盲目提高流量会增加泵耗，却未必最有效。"
+  },
+  {
+    id: 2,
+    label: "负荷调节",
+    title: "把温度稳定在工艺窗口",
+    objective: "冷流体出口控制在 72–76°C，泵耗 ≤ 12.8 kW",
+    shortObjective: "出口温度 72–76°C；泵耗 ≤ 12.8 kW",
+    scenario:
+      "下游反应器要求预热温度落在 72–76°C。冷凝水泵送能力有限，你只能在流量和有效面积之间寻找平衡。",
+    hint:
+      "热流体流量增加，会带来更多可用热量；冷流体流量降低，则单千克流体升温更明显。注意两者都会改变泵耗。",
+    formula: "Q = m·cₚ·ΔT · 运行能耗",
+    init: {
+      hotFlow: 1.12,
+      coldFlow: 1.28,
+      area: 0.82,
+      fouling: 0.05,
+      enhancement: false,
+      counterflow: true
+    },
+    locked: ["enhancement", "cleaning"],
+    target: {
+      minTemp: 72,
+      maxTemp: 76,
+      maxPump: 12.8,
+      requireCounterflow: false
+    },
+    theory:
+      "冷流体吸收的热量 Q=mcₚ(Tout−Tin)。在热量一定时，降低冷流体流量会使出口温度升高；增加热流体流量则能提供更多热量，但同时影响两侧热容和泵耗。",
+    bestDecision: "通过流量与面积组合，把温度稳定在工艺窗口。",
+    improvement: "不要只追求高温，越过工艺窗口同样会造成运行风险。"
+  },
+  {
+    id: 3,
+    label: "污垢危机",
+    title: "总传热系数正在下降",
+    objective: "处理污垢影响，使出口达到 70–74°C",
+    shortObjective: "出口 70–74°C；泵耗 ≤ 13.2 kW",
+    scenario:
+      "连续运行后，管壁附着物增多，总传热系数明显下降。在线清洗能恢复性能，但会影响本班次的连续运行评价。",
+    hint:
+      "污垢层相当于额外热阻。在线清洗会降低污垢热阻，使 K 和 Q 上升；如果只提高流量，泵耗也会迅速增加。",
+    formula: "串联热阻 · K↓ → Q↓ · 在线清洗",
+    init: {
+      hotFlow: 1.28,
+      coldFlow: 1.18,
+      area: 0.98,
+      fouling: 0.32,
+      enhancement: false,
+      counterflow: true
+    },
+    locked: ["enhancement"],
+    target: {
+      minTemp: 70,
+      maxTemp: 74,
+      maxPump: 13.2,
+      requireCounterflow: false,
+      maxFouling: 0.12
+    },
+    theory:
+      "污垢层、管壁和两侧对流换热共同构成串联热阻。污垢热阻增大会使总传热系数 K 下降，在温差和面积不变时，传热速率 Q 也随之降低。",
+    bestDecision: "及时清除污垢热阻，恢复了设备传热能力。",
+    improvement: "污垢是渐进过程，稳定运行比事后大幅提流量更节能。"
+  },
+  {
+    id: 4,
+    label: "强化传热",
+    title: "让 K 提升，但别让泵先投降",
+    objective: "在泵耗 ≤ 13.8 kW 下维持出口 80–84°C",
+    shortObjective: "出口 80–84°C；泵耗 ≤ 13.8 kW",
+    scenario:
+      "生产负荷提高，原有换热能力不足。设备可以投用扰流强化组件，但流动阻力会同步增加。",
+    hint:
+      "先投用强化传热提高 K，再小幅调节流量。强化传热的价值不是“越高越好”，而是用可接受的泵耗换来足够的热量。",
+    formula: "强化传热 · K↑ / P↑ · 性能评价",
+    init: {
+      hotFlow: 1.34,
+      coldFlow: 0.86,
+      area: 0.78,
+      fouling: 0.08,
+      enhancement: false,
+      counterflow: true
+    },
+    locked: ["cleaning"],
+    target: {
+      minTemp: 80,
+      maxTemp: 84,
+      maxPump: 13.8,
+      requireCounterflow: false,
+      requireEnhancement: true
+    },
+    theory:
+      "扰流元件能破坏边界层、提高表面传热系数，从而提高 K。但强化元件也会增大流动阻力，泵耗随流量快速上升，因此必须做综合性能评价。",
+    bestDecision: "用强化传热提升了 K，而非单纯堆高流量。",
+    improvement: "强化传热要以可接受的压降和泵耗为前提。"
+  },
+  {
+    id: 5,
+    label: "峰值调度",
+    title: "最后一小时，系统已没有余量",
+    objective: "出口达到 77–79°C，同时泵耗 ≤ 14.5 kW",
+    shortObjective: "出口 77–79°C；泵耗 ≤ 14.5 kW",
+    scenario:
+      "交班前最后一小时，下游临时提高需求。污垢、流量和强化传热都还有调节空间，但工艺窗口更窄，泵送系统也接近上限。",
+    hint:
+      "本关没有唯一解。先清洗、再判断是否需要强化传热，最后细调冷热流量。关注温度是否只在目标区间两端徘徊。",
+    formula: "综合调度 · 传热速率 · 泵耗预算",
+    init: {
+      hotFlow: 1.23,
+      coldFlow: 1.05,
+      area: 0.92,
+      fouling: 0.22,
+      enhancement: false,
+      counterflow: true
+    },
+    locked: [],
+    target: {
+      minTemp: 77,
+      maxTemp: 79,
+      maxPump: 14.5,
+      requireCounterflow: false,
+      maxFouling: 0.08
+    },
+    theory:
+      "换热器运行是传热能力、流体输送能耗与设备状态之间的综合优化。温度、泵耗和清污成本必须同时满足，不能把某一个指标推到极限。",
+    bestDecision: "在狭窄工艺窗口内完成了温度与泵耗的综合平衡。",
+    improvement: "结束高负荷任务后，应检查污垢增长与强化元件的压降变化。"
+  }
+];
+
+const $ = (selector, root = document) => root.querySelector(selector);
+const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+const lerp = (a, b, t) => a + (b - a) * t;
+
+const dom = {
+  startScreen: $("#startScreen"),
+  gameScreen: $("#gameScreen"),
+  settlementScreen: $("#settlementScreen"),
+  startBtn: $("#startBtn"),
+  startHelpBtn: $("#startHelpBtn"),
+  soundBtn: $("#soundBtn"),
+  formulaBtn: $("#formulaBtn"),
+  pauseBtn: $("#pauseBtn"),
+  missionCounter: $("#missionCounter"),
+  progressPercent: $("#progressPercent"),
+  progressBar: $("#progressBar"),
+  missionNumber: $("#missionNumber"),
+  missionLabel: $("#missionLabel"),
+  missionTitle: $("#missionTitle"),
+  missionObjective: $("#missionObjective"),
+  consoleObjective: $("#consoleObjective"),
+  restartMissionBtn: $("#restartMissionBtn"),
+  systemStatus: $("#systemStatus"),
+  canvas: $("#exchangerCanvas"),
+  scanOverlay: $("#scanOverlay"),
+  coldOutValue: $("#coldOutValue"),
+  coldOutGauge: $("#coldOutGauge"),
+  targetZone: $("#targetZone"),
+  heatValue: $("#heatValue"),
+  heatTrend: $("#heatTrend"),
+  pumpValue: $("#pumpValue"),
+  pumpLimit: $("#pumpLimit"),
+  kValue: $("#kValue"),
+  foulingState: $("#foulingState"),
+  hotFlow: $("#hotFlow"),
+  coldFlow: $("#coldFlow"),
+  areaFactor: $("#areaFactor"),
+  hotFlowOutput: $("#hotFlowOutput"),
+  coldFlowOutput: $("#coldFlowOutput"),
+  areaOutput: $("#areaOutput"),
+  parallelBtn: $("#parallelBtn"),
+  counterBtn: $("#counterBtn"),
+  turbulatorBtn: $("#turbulatorBtn"),
+  cleanBtn: $("#cleanBtn"),
+  cleanHint: $("#cleanHint"),
+  cleanCount: $("#cleanCount"),
+  submitBtn: $("#submitBtn"),
+  modalBackdrop: $("#modalBackdrop"),
+  briefingModal: $("#briefingModal"),
+  resultModal: $("#resultModal"),
+  formulaModal: $("#formulaModal"),
+  pauseModal: $("#pauseModal"),
+  reportModal: $("#reportModal"),
+  briefingEyebrow: $("#briefingEyebrow"),
+  briefingTitle: $("#briefingTitle"),
+  briefingNumber: $("#briefingNumber"),
+  briefingScenario: $("#briefingScenario"),
+  briefingObjective: $("#briefingObjective"),
+  briefingHint: $("#briefingHint"),
+  briefingFormula: $("#briefingFormula"),
+  briefingCloseBtn: $("#briefingCloseBtn"),
+  briefingStartBtn: $("#briefingStartBtn"),
+  resultIcon: $("#resultIcon"),
+  resultEyebrow: $("#resultEyebrow"),
+  resultTitle: $("#resultTitle"),
+  resultDescription: $("#resultDescription"),
+  resultScore: $("#resultScore"),
+  resultTemp: $("#resultTemp"),
+  resultPump: $("#resultPump"),
+  resultTheory: $("#resultTheory"),
+  retryBtn: $("#retryBtn"),
+  nextBtn: $("#nextBtn"),
+  continueBtn: $("#continueBtn"),
+  pauseRestartBtn: $("#pauseRestartBtn"),
+  settlementSubtitle: $("#settlementSubtitle"),
+  gradeLetter: $("#gradeLetter"),
+  finalScore: $("#finalScore"),
+  gradeComment: $("#gradeComment"),
+  tempScore: $("#tempScore"),
+  energyScore: $("#energyScore"),
+  principleScore: $("#principleScore"),
+  tempMetricBar: $("#tempMetricBar"),
+  energyMetricBar: $("#energyMetricBar"),
+  principleMetricBar: $("#principleMetricBar"),
+  bestDecision: $("#bestDecision"),
+  improvementText: $("#improvementText"),
+  reportSerial: $("#reportSerial"),
+  replayBtn: $("#replayBtn"),
+  viewReportBtn: $("#viewReportBtn"),
+  skipSettlementBtn: $("#skipSettlementBtn"),
+  reportTable: $("#reportTable"),
+  reportReplayBtn: $("#reportReplayBtn"),
+  toast: $("#toast"),
+  liveRegion: $("#liveRegion"),
+  settlementCanvas: $("#settlementCanvas")
+};
+
+const state = {
+  screen: "start",
+  missionIndex: 0,
+  params: null,
+  metrics: null,
+  cleanUses: 1,
+  soundEnabled: true,
+  running: false,
+  submitting: false,
+  modal: null,
+  runRecords: [],
+  settlementTimer: null,
+  globalTime: 0
+};
+
+const particles = Array.from({ length: 78 }, (_, index) => ({
+  progress: Math.random(),
+  speed: 0.055 + Math.random() * 0.11,
+  type: index % 7 === 0 ? "heat" : index % 4 === 0 ? "hot" : "cold",
+  lane: index % 7,
+  wobble: Math.random() * Math.PI * 2,
+  size: 1.2 + Math.random() * 2.1
+}));
+
+const heatWisps = Array.from({ length: 24 }, () => ({
+  x: Math.random(),
+  y: Math.random(),
+  phase: Math.random() * Math.PI * 2,
+  speed: 0.08 + Math.random() * 0.12,
+  size: 10 + Math.random() * 28
+}));
+
+let audioContext = null;
+let canvasSize = { width: 1000, height: 520, scale: 1 };
+let settlementParticles = [];
+let settlementStart = 0;
+
+function calculateMetrics(params) {
+  const Ch = params.hotFlow * PHYSICS.hotCp;
+  const Cc = params.coldFlow * PHYSICS.coldCp;
+  const area = params.area;
+  const cleanFactor = Math.max(0.38, 1 - params.fouling);
+  const enhancementFactor = params.enhancement ? 1.32 : 1;
+  const UA =
+    PHYSICS.baseUa *
+    area *
+    Math.pow(params.coldFlow, 0.55) *
+    cleanFactor *
+    enhancementFactor;
+
+  const Cmin = Math.min(Ch, Cc);
+  const Cmax = Math.max(Ch, Cc);
+  const Cr = Cmin / Cmax;
+  const NTU = UA / Cmin;
+  let effectiveness;
+
+  if (params.counterflow) {
+    const expTerm = Math.exp(-NTU * (1 - Cr));
+    effectiveness =
+      Math.abs(Cr - 1) < 0.0001
+        ? NTU / (1 + NTU)
+        : (1 - expTerm) / (1 - Cr * expTerm);
+  } else {
+    effectiveness =
+      (1 - Math.exp(-NTU * (1 + Cr))) / (1 + Cr);
+  }
+
+  const Qmax = Cmin * (PHYSICS.hotInlet - PHYSICS.coldInlet);
+  const Q = Qmax * clamp(effectiveness, 0, 1);
+  const hotOut = PHYSICS.hotInlet - Q / Ch;
+  const coldOut = PHYSICS.coldInlet + Q / Cc;
+  const pump =
+    PHYSICS.pumpBase +
+    PHYSICS.pumpFlowFactor * Math.pow(params.coldFlow, 3) +
+    PHYSICS.pumpAreaFactor * area +
+    (params.enhancement ? PHYSICS.pumpEnhancementCost : 0);
+
+  return {
+    Q,
+    UA,
+    K: UA / area,
+    effectiveness,
+    NTU,
+    hotOut,
+    coldOut,
+    pump,
+    capacityHot: Ch,
+    capacityCold: Cc
+  };
+}
+
+function evaluateMission() {
+  const mission = MISSIONS[state.missionIndex];
+  const target = mission.target;
+  const metrics = state.metrics;
+  const tempPass = metrics.coldOut >= target.minTemp && metrics.coldOut <= target.maxTemp;
+  const pumpPass = metrics.pump <= target.maxPump;
+  const directionPass = !target.requireCounterflow || state.params.counterflow;
+  const enhancementPass = !target.requireEnhancement || state.params.enhancement;
+  const foulingPass =
+    target.maxFouling === undefined || state.params.fouling <= target.maxFouling;
+  const passed = tempPass && pumpPass && directionPass && enhancementPass && foulingPass;
+
+  const targetCenter = (target.minTemp + target.maxTemp) / 2;
+  const targetHalf = (target.maxTemp - target.minTemp) / 2;
+  const tempError = Math.max(0, Math.abs(metrics.coldOut - targetCenter) - targetHalf);
+  const tempScore = clamp(100 - tempError * 18, 0, 100);
+  const pumpScore = clamp(
+    100 - Math.max(0, metrics.pump - target.maxPump * 0.72) * 11,
+    0,
+    100
+  );
+  const principleChecks = [directionPass, enhancementPass, foulingPass];
+  const principleScore = clamp(
+    principleChecks.filter(Boolean).length * 30 + (tempPass ? 10 : 0),
+    0,
+    100
+  );
+  const score = Math.round(
+    tempScore * 0.5 + pumpScore * 0.25 + principleScore * 0.25
+  );
+
+  return {
+    passed,
+    tempPass,
+    pumpPass,
+    directionPass,
+    enhancementPass,
+    foulingPass,
+    tempScore,
+    pumpScore,
+    principleScore,
+    score
+  };
+}
+
+function getMissionParams(mission) {
+  return { ...mission.init };
+}
+
+function formatNumber(value, digits = 1) {
+  return Number(value).toFixed(digits);
+}
+
+function setRangeFill(input) {
+  const min = Number(input.min);
+  const max = Number(input.max);
+  const value = Number(input.value);
+  const percent = ((value - min) / (max - min)) * 100;
+  input.style.setProperty("--fill", `${percent}%`);
+}
+
+function updateControlValues() {
+  if (!state.params) return;
+  dom.hotFlow.value = state.params.hotFlow.toFixed(2);
+  dom.coldFlow.value = state.params.coldFlow.toFixed(2);
+  dom.areaFactor.value = state.params.area.toFixed(2);
+  dom.hotFlowOutput.textContent = `${state.params.hotFlow.toFixed(2)} kg/s`;
+  dom.coldFlowOutput.textContent = `${state.params.coldFlow.toFixed(2)} kg/s`;
+  dom.areaOutput.textContent = `${Math.round(state.params.area * 100)}%`;
+  [dom.hotFlow, dom.coldFlow, dom.areaFactor].forEach(setRangeFill);
+
+  dom.parallelBtn.classList.toggle("is-active", !state.params.counterflow);
+  dom.counterBtn.classList.toggle("is-active", state.params.counterflow);
+  dom.parallelBtn.setAttribute("aria-pressed", String(!state.params.counterflow));
+  dom.counterBtn.setAttribute("aria-pressed", String(state.params.counterflow));
+
+  dom.turbulatorBtn.classList.toggle("is-active", state.params.enhancement);
+  dom.turbulatorBtn.setAttribute("aria-pressed", String(state.params.enhancement));
+  dom.cleanHint.textContent =
+    state.params.fouling < 0.08
+      ? "当前污垢已处于低水平"
+      : `当前污垢热阻 ${Math.round(state.params.fouling * 100)}%`;
+}
+
+function setControlsLocked() {
+  const mission = MISSIONS[state.missionIndex];
+  const locked = new Set(mission.locked);
+  dom.hotFlow.disabled = locked.has("hotFlow") || state.submitting;
+  dom.coldFlow.disabled = locked.has("coldFlow") || state.submitting;
+  dom.areaFactor.disabled = locked.has("area") || state.submitting;
+  dom.turbulatorBtn.disabled = locked.has("enhancement") || state.submitting;
+  dom.parallelBtn.disabled = false;
+  dom.counterBtn.disabled = false;
+  dom.cleanBtn.disabled =
+    locked.has("cleaning") ||
+    state.submitting ||
+    state.cleanUses <= 0 ||
+    state.params.fouling < 0.045;
+  dom.submitBtn.disabled = state.submitting;
+  dom.cleanCount.textContent = `× ${state.cleanUses}`;
+}
+
+function renderMetrics() {
+  const mission = MISSIONS[state.missionIndex];
+  const target = mission.target;
+  const metrics = calculateMetrics(state.params);
+  state.metrics = metrics;
+
+  dom.coldOutValue.textContent = formatNumber(metrics.coldOut, 1);
+  dom.heatValue.textContent = formatNumber(metrics.Q, 1);
+  dom.pumpValue.textContent = formatNumber(metrics.pump, 1);
+  dom.kValue.textContent = formatNumber(metrics.K, 2);
+  dom.pumpLimit.textContent = `上限 ${formatNumber(target.maxPump, 1)} kW`;
+  dom.foulingState.textContent = `污垢热阻 ${Math.round(state.params.fouling * 100)}%`;
+  dom.heatTrend.textContent =
+    metrics.effectiveness > 0.72
+      ? "传热能力接近上限"
+      : metrics.effectiveness > 0.55
+        ? "能量传递保持稳定"
+        : "传热温差仍有空间";
+
+  const tempPercent = clamp((metrics.coldOut - 20) / 70, 0, 1) * 100;
+  dom.coldOutGauge.style.width = `${tempPercent}%`;
+
+  const zoneLeft = clamp((target.minTemp - 20) / 70, 0, 1) * 100;
+  const zoneWidth =
+    clamp((target.maxTemp - target.minTemp) / 70, 0.01, 1) * 100;
+  dom.targetZone.style.left = `${zoneLeft}%`;
+  dom.targetZone.style.width = `${zoneWidth}%`;
+
+  const tempInRange =
+    metrics.coldOut >= target.minTemp && metrics.coldOut <= target.maxTemp;
+  const pumpInRange = metrics.pump <= target.maxPump;
+  dom.coldOutValue.style.color = tempInRange ? "var(--green)" : "var(--text)";
+  dom.pumpValue.style.color = pumpInRange ? "var(--text)" : "var(--red)";
+
+  if (!pumpInRange) {
+    dom.systemStatus.className = "status-chip status-danger";
+    dom.systemStatus.innerHTML = "<span></span>泵耗超限";
+  } else if (!tempInRange) {
+    dom.systemStatus.className = "status-chip status-warning";
+    dom.systemStatus.innerHTML = "<span></span>温度偏移";
+  } else {
+    dom.systemStatus.className = "status-chip status-running";
+    dom.systemStatus.innerHTML = "<span></span>运行中";
+  }
+}
+
+function updateAll() {
+  updateControlValues();
+  renderMetrics();
+  setControlsLocked();
+}
+
+function loadMission(index, showBriefing = true) {
+  state.missionIndex = index;
+  state.cleanUses = 1;
+  state.submitting = false;
+  state.params = getMissionParams(MISSIONS[index]);
+  const mission = MISSIONS[index];
+
+  dom.missionCounter.textContent = `任务 ${String(index + 1).padStart(2, "0")} / 05`;
+  dom.progressPercent.textContent = `${Math.round((index / 5) * 100)}%`;
+  dom.progressBar.style.width = `${(index / 5) * 100}%`;
+  dom.missionNumber.textContent = String(index + 1).padStart(2, "0");
+  dom.missionLabel.textContent = mission.label;
+  dom.missionTitle.textContent = mission.title;
+  dom.missionObjective.textContent = mission.shortObjective;
+  dom.consoleObjective.textContent = mission.shortObjective;
+
+  updateAll();
+
+  if (showBriefing) {
+    showBriefingModal();
+  }
+}
+
+function showBriefingModal() {
+  const mission = MISSIONS[state.missionIndex];
+  dom.briefingEyebrow.textContent = `MISSION ${String(mission.id).padStart(2, "0")} · BRIEFING`;
+  dom.briefingTitle.textContent = mission.label;
+  dom.briefingNumber.textContent = String(mission.id).padStart(2, "0");
+  dom.briefingScenario.textContent = mission.scenario;
+  dom.briefingObjective.textContent = `任务目标：${mission.objective}`;
+  dom.briefingHint.textContent = mission.hint;
+  dom.briefingFormula.textContent = mission.formula;
+  dom.briefingCloseBtn.hidden = false;
+  dom.briefingStartBtn.textContent = "开始调节";
+  openModal("briefing");
+}
+
+function openModal(type) {
+  state.modal = type;
+  dom.modalBackdrop.hidden = false;
+  [dom.briefingModal, dom.resultModal, dom.formulaModal, dom.pauseModal, dom.reportModal].forEach(
+    (modal) => {
+      modal.hidden = true;
+    }
+  );
+
+  const modalMap = {
+    briefing: dom.briefingModal,
+    result: dom.resultModal,
+    formula: dom.formulaModal,
+    pause: dom.pauseModal,
+    report: dom.reportModal
+  };
+  modalMap[type].hidden = false;
+
+  const focusTarget = modalMap[type].querySelector("button:not([disabled])");
+  window.setTimeout(() => focusTarget?.focus(), 50);
+}
+
+function closeModal() {
+  dom.modalBackdrop.hidden = true;
+  state.modal = null;
+}
+
+function showToast(message) {
+  dom.toast.textContent = message;
+  dom.toast.classList.add("is-visible");
+  window.clearTimeout(showToast.timer);
+  showToast.timer = window.setTimeout(() => {
+    dom.toast.classList.remove("is-visible");
+  }, 1800);
+}
+
+function announce(message) {
+  dom.liveRegion.textContent = "";
+  window.setTimeout(() => {
+    dom.liveRegion.textContent = message;
+  }, 30);
+}
+
+function ensureAudio() {
+  if (!state.soundEnabled || audioContext) return;
+  const AudioCtor = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtor) return;
+  audioContext = new AudioCtor();
+}
+
+function playTone({
+  frequency = 440,
+  duration = 0.1,
+  gain = 0.035,
+  type = "sine",
+  delay = 0
+}) {
+  if (!state.soundEnabled) return;
+  ensureAudio();
+  if (!audioContext) return;
+  if (audioContext.state === "suspended") audioContext.resume();
+
+  const oscillator = audioContext.createOscillator();
+  const volume = audioContext.createGain();
+  const now = audioContext.currentTime + delay;
+
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, now);
+  volume.gain.setValueAtTime(0, now);
+  volume.gain.linearRampToValueAtTime(gain, now + 0.012);
+  volume.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+  oscillator.connect(volume);
+  volume.connect(audioContext.destination);
+  oscillator.start(now);
+  oscillator.stop(now + duration + 0.02);
+}
+
+function playClick() {
+  playTone({ frequency: 520, duration: 0.055, gain: 0.018, type: "triangle" });
+}
+
+function playSuccess() {
+  playTone({ frequency: 392, duration: 0.18, gain: 0.035, type: "sine" });
+  playTone({ frequency: 523.25, duration: 0.22, gain: 0.03, delay: 0.11 });
+  playTone({ frequency: 659.25, duration: 0.32, gain: 0.026, delay: 0.23 });
+}
+
+function playFailure() {
+  playTone({ frequency: 220, duration: 0.22, gain: 0.03, type: "triangle" });
+  playTone({ frequency: 174.61, duration: 0.35, gain: 0.026, type: "triangle", delay: 0.12 });
+}
+
+function playSettlement() {
+  const notes = [261.63, 329.63, 392, 523.25, 659.25];
+  notes.forEach((frequency, index) => {
+    playTone({
+      frequency,
+      duration: 0.55,
+      gain: index === notes.length - 1 ? 0.035 : 0.022,
+      type: "sine",
+      delay: index * 0.14
+    });
+  });
+  playTone({ frequency: 98, duration: 1.1, gain: 0.02, type: "triangle" });
+}
+
+function submitMission() {
+  if (state.submitting) return;
+  state.submitting = true;
+  setControlsLocked();
+  dom.scanOverlay.hidden = false;
+  dom.scanOverlay.querySelector("span").textContent = "正在校核传热模型";
+  playClick();
+
+  window.setTimeout(() => {
+    const result = evaluateMission();
+    const mission = MISSIONS[state.missionIndex];
+    dom.scanOverlay.hidden = true;
+    state.submitting = false;
+    setControlsLocked();
+    showResult(result);
+
+    if (result.passed) {
+      state.runRecords[state.missionIndex] = {
+        id: mission.id,
+        label: mission.label,
+        coldOut: state.metrics.coldOut,
+        pump: state.metrics.pump,
+        score: result.score
+      };
+      playSuccess();
+    } else {
+      playFailure();
+    }
+  }, 1050);
+}
+
+function buildFailureDescription(result) {
+  const target = MISSIONS[state.missionIndex].target;
+  if (!result.directionPass) return "流向选择没有提供足够大的平均传热温差。请比较并流与逆流后的出口温度。";
+  if (!result.enhancementPass) return "当前 K 不足以完成高负荷任务。试试投用强化传热组件。";
+  if (!result.foulingPass) return "污垢热阻仍然过高，设备没有恢复到目标传热能力。";
+  if (!result.tempPass && state.metrics.coldOut < target.minTemp)
+    return "冷流体出口温度偏低。可增加可用热量、降低冷流体流量，或提高 K。";
+  if (!result.tempPass && state.metrics.coldOut > target.maxTemp)
+    return "冷流体出口温度过高，已经越过工艺上限。适当降低热负荷或调整流量。";
+  if (!result.pumpPass) return "温度虽然接近目标，但泵耗超过上限。优先选择低阻力方案。";
+  return "运行指标尚未同时满足任务条件。请结合知识手册重新调节。";
+}
+
+function showResult(result) {
+  const mission = MISSIONS[state.missionIndex];
+  dom.resultIcon.classList.toggle("is-failed", !result.passed);
+  dom.resultIcon.innerHTML = result.passed
+    ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 13 4 4L19 7"></path></svg>'
+    : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7 7 17"></path></svg>';
+  dom.resultEyebrow.textContent = result.passed ? "SHIFT VERIFIED" : "CHECK REQUIRED";
+  dom.resultTitle.textContent = result.passed ? "运行校验通过" : "方案需要复核";
+  dom.resultDescription.textContent = result.passed
+    ? "温度、泵耗和传热原理检查均已通过。系统已记录本班次运行结果。"
+    : buildFailureDescription(result);
+  dom.resultScore.textContent = result.score;
+  dom.resultTemp.textContent = `${formatNumber(state.metrics.coldOut, 1)}°C`;
+  dom.resultPump.textContent = `${formatNumber(state.metrics.pump, 1)}kW`;
+  dom.resultTheory.textContent = mission.theory;
+  dom.retryBtn.hidden = result.passed;
+  dom.nextBtn.hidden = !result.passed;
+  dom.resultModal.querySelector(".result-actions").style.justifyContent = result.passed
+    ? "center"
+    : "center";
+  dom.nextBtn.textContent =
+    state.missionIndex === MISSIONS.length - 1 ? "生成运行结算" : "进入下一任务";
+  openModal("result");
+  announce(
+    result.passed
+      ? `任务通过，得分 ${result.score}。${mission.theory}`
+      : `任务未通过。${buildFailureDescription(result)}`
+  );
+}
+
+function retryMission() {
+  closeModal();
+  loadMission(state.missionIndex, false);
+  showToast("已恢复本关初始参数");
+  playClick();
+}
+
+function goNextMission() {
+  closeModal();
+  if (state.missionIndex === MISSIONS.length - 1) {
+    startSettlement();
+    return;
+  }
+  loadMission(state.missionIndex + 1, true);
+  playClick();
+}
+
+function cleanExchanger() {
+  if (state.cleanUses <= 0 || state.params.fouling < 0.045) return;
+  state.cleanUses -= 1;
+  state.params.fouling = 0.035;
+  updateAll();
+  playTone({ frequency: 680, duration: 0.14, gain: 0.022, type: "triangle" });
+  playTone({ frequency: 920, duration: 0.18, gain: 0.018, type: "sine", delay: 0.08 });
+  showToast("在线清洗完成：污垢热阻降至 3.5%");
+  announce("在线清洗完成，污垢热阻降至百分之三点五");
+}
+
+function startGame() {
+  state.screen = "game";
+  state.runRecords = [];
+  dom.startScreen.hidden = true;
+  dom.gameScreen.hidden = false;
+  dom.settlementScreen.hidden = true;
+  closeModal();
+  ensureAudio();
+  playTone({ frequency: 330, duration: 0.18, gain: 0.03 });
+  playTone({ frequency: 495, duration: 0.3, gain: 0.022, delay: 0.12 });
+  loadMission(0, true);
+}
+
+function calculateFinalResults() {
+  const validRecords = state.runRecords.filter(Boolean);
+  const averageScore =
+    validRecords.reduce((sum, item) => sum + item.score, 0) / validRecords.length;
+  const temperature = Math.round(
+    validRecords.reduce((sum, item) => sum + item.score * 0.92, 0) / validRecords.length
+  );
+  const energy = Math.round(
+    validRecords.reduce(
+      (sum, item) => sum + clamp(100 - Math.max(0, item.pump - 10) * 5, 62, 100),
+      0
+    ) / validRecords.length
+  );
+  const principle = Math.round(clamp(72 + averageScore * 0.25, 72, 100));
+  const total = Math.round(temperature * 0.42 + energy * 0.26 + principle * 0.32);
+  const grade = total >= 92 ? "S" : total >= 84 ? "A" : total >= 72 ? "B" : "C";
+  const comments = {
+    S: "优秀调度：热流、泵耗与设备状态始终在掌控之中。",
+    A: "稳定可靠：关键指标达标，仍有小幅节能空间。",
+    B: "任务完成：理解基本关系，但部分决策需要再优化。",
+    C: "系统告警：建议复习换热器流动方式与污垢热阻。"
+  };
+
+  return {
+    total,
+    grade,
+    comment: comments[grade],
+    temperature,
+    energy,
+    principle
+  };
+}
+
+function animateNumber(element, target, duration = 1000) {
+  const start = performance.now();
+  function tick(now) {
+    const progress = clamp((now - start) / duration, 0, 1);
+    const eased = 1 - Math.pow(1 - progress, 3);
+    element.textContent = Math.round(target * eased);
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function startSettlement() {
+  state.screen = "settlement";
+  dom.gameScreen.hidden = true;
+  dom.settlementScreen.hidden = false;
+  dom.settlementScreen.classList.remove("is-skipped");
+  closeModal();
+  playSettlement();
+
+  const final = calculateFinalResults();
+  dom.gradeLetter.textContent = final.grade;
+  dom.finalScore.textContent = "0";
+  dom.tempScore.textContent = "0";
+  dom.energyScore.textContent = "0";
+  dom.principleScore.textContent = "0";
+  dom.tempMetricBar.style.width = "0";
+  dom.energyMetricBar.style.width = "0";
+  dom.principleMetricBar.style.width = "0";
+  dom.gradeComment.textContent = final.comment;
+  dom.bestDecision.textContent =
+    state.runRecords[state.runRecords.length - 1]?.score >= 88
+      ? "在最后的高负荷任务中保持了温度与泵耗平衡。"
+      : MISSIONS[state.missionIndex].bestDecision;
+  dom.improvementText.textContent = MISSIONS[state.missionIndex].improvement;
+  dom.reportSerial.textContent = `RPT-KB04-${String(Date.now()).slice(-6)}`;
+  dom.settlementSubtitle.textContent = "热流数据汇聚完成，正在生成值班报告";
+  settlementStart = performance.now();
+  createSettlementParticles();
+
+  window.clearTimeout(state.settlementTimer);
+  state.settlementTimer = window.setTimeout(() => {
+    animateNumber(dom.finalScore, final.total, 900);
+    animateNumber(dom.tempScore, final.temperature, 850);
+    animateNumber(dom.energyScore, final.energy, 850);
+    animateNumber(dom.principleScore, final.principle, 850);
+    dom.tempMetricBar.style.width = `${final.temperature}%`;
+    dom.energyMetricBar.style.width = `${final.energy}%`;
+    dom.principleMetricBar.style.width = `${final.principle}%`;
+    dom.settlementSubtitle.textContent = "运行记录已归档，可查看完整任务数据";
+    buildReportTable();
+    announce(
+      `完成全部任务。综合评级 ${final.grade}，运行评分 ${final.total} 分。`
+    );
+  }, 1750);
+}
+
+function skipSettlement() {
+  window.clearTimeout(state.settlementTimer);
+  dom.settlementScreen.classList.add("is-skipped");
+  const final = calculateFinalResults();
+  dom.finalScore.textContent = final.total;
+  dom.tempScore.textContent = final.temperature;
+  dom.energyScore.textContent = final.energy;
+  dom.principleScore.textContent = final.principle;
+  dom.tempMetricBar.style.width = `${final.temperature}%`;
+  dom.energyMetricBar.style.width = `${final.energy}%`;
+  dom.principleMetricBar.style.width = `${final.principle}%`;
+  dom.settlementSubtitle.textContent = "运行记录已归档，可查看完整任务数据";
+  buildReportTable();
+  playClick();
+}
+
+function buildReportTable() {
+  const records = state.runRecords.filter(Boolean);
+  const rows = records
+    .map(
+      (record) => `
+        <div class="report-row">
+          <span class="report-index">${String(record.id).padStart(2, "0")}</span>
+          <span>${record.label}</span>
+          <span>${formatNumber(record.coldOut, 1)}°C</span>
+          <span>${formatNumber(record.pump, 1)} kW</span>
+          <span>${record.score} 分</span>
+        </div>
+      `
+    )
+    .join("");
+
+  dom.reportTable.innerHTML = `
+    <div class="report-row">
+      <span>NO.</span>
+      <span>任务</span>
+      <span>出口温度</span>
+      <span>泵耗</span>
+      <span>评分</span>
+    </div>
+    ${rows}
+  `;
+}
+
+function openFormula() {
+  openModal("formula");
+  playClick();
+}
+
+function toggleSound() {
+  state.soundEnabled = !state.soundEnabled;
+  dom.soundBtn.classList.toggle("is-muted", !state.soundEnabled);
+  dom.soundBtn.setAttribute("aria-label", state.soundEnabled ? "关闭声音" : "开启声音");
+  if (state.soundEnabled) playClick();
+  showToast(state.soundEnabled ? "声音已开启" : "声音已关闭");
+}
+
+function replayGame() {
+  closeModal();
+  dom.settlementScreen.hidden = true;
+  dom.gameScreen.hidden = false;
+  state.runRecords = [];
+  state.settlementTimer = null;
+  loadMission(0, true);
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function changeParam(key, value) {
+  if (!state.params || state.submitting) return;
+  state.params[key] = value;
+  updateAll();
+}
+
+function drawRoundedRect(ctx, x, y, width, height, radius) {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + width - r, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+  ctx.lineTo(x + width, y + height - r);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+  ctx.lineTo(x + r, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function resizeCanvas() {
+  const rect = dom.canvas.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  dom.canvas.width = Math.max(1, Math.round(rect.width * dpr));
+  dom.canvas.height = Math.max(1, Math.round(rect.height * dpr));
+  canvasSize = {
+    width: rect.width,
+    height: rect.height,
+    dpr
+  };
+}
+
+function drawExchanger(now) {
+  if (state.screen === "start") return;
+  const ctx = dom.canvas.getContext("2d");
+  if (!ctx || !state.params) return;
+
+  const dpr = canvasSize.dpr;
+  const width = canvasSize.width;
+  const height = canvasSize.height;
+  const logicalWidth = 1000;
+  const logicalHeight = 520;
+  const scale = Math.min(width / logicalWidth, height / logicalHeight);
+  const offsetX = (width - logicalWidth * scale) / 2;
+  const offsetY = (height - logicalHeight * scale) / 2;
+  const time = now / 1000;
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+  ctx.save();
+  ctx.translate(offsetX, offsetY);
+  ctx.scale(scale, scale);
+
+  const shell = { x: 110, y: 118, w: 780, h: 284 };
+  const metrics = state.metrics || calculateMetrics(state.params);
+  const tempNormalized = clamp((metrics.coldOut - 25) / 65, 0, 1);
+
+  const background = ctx.createRadialGradient(500, 260, 20, 500, 260, 560);
+  background.addColorStop(0, "rgba(24, 79, 98, 0.12)");
+  background.addColorStop(1, "rgba(3, 13, 19, 0)");
+  ctx.fillStyle = background;
+  ctx.fillRect(0, 0, logicalWidth, logicalHeight);
+
+  drawTechnicalGrid(ctx, time);
+  drawHeatWisps(ctx, time);
+  drawPipes(ctx, shell, metrics, time);
+  drawShell(ctx, shell, metrics);
+  drawTubeBundle(ctx, shell, metrics, time);
+  drawFlowParticles(ctx, shell, metrics, time);
+  drawFouling(ctx, shell, time);
+  drawSensors(ctx, shell, metrics);
+  drawCanvasLabels(ctx, shell, metrics, tempNormalized);
+
+  ctx.restore();
+}
+
+function drawTechnicalGrid(ctx, time) {
+  ctx.save();
+  ctx.strokeStyle = "rgba(91, 157, 181, 0.045)";
+  ctx.lineWidth = 1;
+  for (let x = 30; x < 1000; x += 62) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, 520);
+    ctx.stroke();
+  }
+  for (let y = 20; y < 520; y += 52) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(1000, y);
+    ctx.stroke();
+  }
+
+  ctx.strokeStyle = "rgba(70, 217, 255, 0.055)";
+  ctx.setLineDash([3, 10]);
+  ctx.lineDashOffset = -time * 8;
+  ctx.beginPath();
+  ctx.moveTo(30, 456);
+  ctx.lineTo(970, 456);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawHeatWisps(ctx, time) {
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  heatWisps.forEach((wisp) => {
+    const x = 130 + wisp.x * 720 + Math.sin(time * wisp.speed + wisp.phase) * 18;
+    const y = 130 + wisp.y * 255;
+    const gradient = ctx.createRadialGradient(x, y, 1, x, y, wisp.size);
+    gradient.addColorStop(0, "rgba(255, 128, 71, 0.055)");
+    gradient.addColorStop(1, "rgba(255, 128, 71, 0)");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(x - wisp.size, y - wisp.size, wisp.size * 2, wisp.size * 2);
+  });
+  ctx.restore();
+}
+
+function drawPipes(ctx, shell, metrics, time) {
+  const counter = state.params.counterflow;
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineWidth = 22;
+
+  // 热流体从逆流侧进入；并流时两侧同端进入。
+  ctx.strokeStyle = "rgba(255, 117, 70, 0.17)";
+  ctx.beginPath();
+  ctx.moveTo(counter ? 978 : 20, 170);
+  ctx.lineTo(counter ? shell.x + shell.w : shell.x, 170);
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(70, 217, 255, 0.17)";
+  ctx.beginPath();
+  ctx.moveTo(25, 350);
+  ctx.lineTo(shell.x + 72, 350);
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(255, 117, 70, 0.17)";
+  ctx.beginPath();
+  ctx.moveTo(counter ? shell.x : shell.x + shell.w, 350);
+  ctx.lineTo(counter ? 20 : 978, 350);
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(70, 217, 255, 0.17)";
+  ctx.beginPath();
+  ctx.moveTo(shell.x + shell.w, counter ? 170 : 350);
+  ctx.lineTo(978, counter ? 170 : 350);
+  ctx.stroke();
+
+  ctx.lineWidth = 2;
+  ctx.setLineDash([10, 12]);
+  ctx.lineDashOffset = counter ? time * 23 : -time * 23;
+  ctx.strokeStyle = "rgba(255, 134, 89, 0.64)";
+  ctx.beginPath();
+  ctx.moveTo(counter ? 975 : 25, 170);
+  ctx.lineTo(counter ? shell.x + shell.w - 5 : shell.x + 5, 170);
+  ctx.stroke();
+
+  ctx.strokeStyle = "rgba(82, 221, 255, 0.65)";
+  ctx.beginPath();
+  ctx.moveTo(27, 350);
+  ctx.lineTo(shell.x + 70, 350);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawShell(ctx, shell, metrics) {
+  ctx.save();
+  ctx.shadowColor = "rgba(0, 0, 0, 0.3)";
+  ctx.shadowBlur = 25;
+  ctx.shadowOffsetY = 18;
+  drawRoundedRect(ctx, shell.x, shell.y, shell.w, shell.h, 38);
+  const metal = ctx.createLinearGradient(0, shell.y, 0, shell.y + shell.h);
+  metal.addColorStop(0, "#16313f");
+  metal.addColorStop(0.42, "#0a202b");
+  metal.addColorStop(1, "#07151d");
+  ctx.fillStyle = metal;
+  ctx.fill();
+  ctx.shadowColor = "transparent";
+
+  const heatField = ctx.createLinearGradient(shell.x, 0, shell.x + shell.w, 0);
+  if (state.params.counterflow) {
+    heatField.addColorStop(0, "rgba(255, 113, 60, 0.16)");
+    heatField.addColorStop(0.43, "rgba(255, 151, 64, 0.08)");
+    heatField.addColorStop(0.63, "rgba(70, 217, 255, 0.07)");
+    heatField.addColorStop(1, "rgba(70, 217, 255, 0.14)");
+  } else {
+    heatField.addColorStop(0, "rgba(255, 137, 71, 0.13)");
+    heatField.addColorStop(0.48, "rgba(255, 173, 83, 0.08)");
+    heatField.addColorStop(1, "rgba(70, 217, 255, 0.09)");
+  }
+  drawRoundedRect(ctx, shell.x, shell.y, shell.w, shell.h, 38);
+  ctx.fillStyle = heatField;
+  ctx.fill();
+
+  drawRoundedRect(ctx, shell.x, shell.y, shell.w, shell.h, 38);
+  ctx.strokeStyle = "rgba(119, 174, 196, 0.3)";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  drawRoundedRect(ctx, shell.x + 8, shell.y + 8, shell.w - 16, shell.h - 16, 31);
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.035)";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.fillStyle = "rgba(151, 189, 205, 0.55)";
+  ctx.font = "10px 'Cascadia Mono', Consolas, monospace";
+  ctx.fillText("SHELL & TUBE HEAT EXCHANGER", shell.x + 27, shell.y + 30);
+  ctx.fillText(
+    state.params.counterflow ? "COUNTERFLOW · 逆流" : "PARALLEL FLOW · 并流",
+    shell.x + shell.w - 177,
+    shell.y + 30
+  );
+  ctx.restore();
+}
+
+function getTubeY(index) {
+  return [177, 223, 269, 315, 361][index];
+}
+
+function drawTubeBundle(ctx, shell, metrics, time) {
+  const counter = state.params.counterflow;
+  const tubeStart = shell.x + 54;
+  const tubeEnd = shell.x + shell.w - 54;
+  const tubeColor = state.params.enhancement
+    ? "rgba(255, 216, 105, 0.42)"
+    : "rgba(79, 217, 250, 0.46)";
+
+  ctx.save();
+  for (let i = 0; i < 5; i += 1) {
+    const y = getTubeY(i);
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.48)";
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.moveTo(tubeStart, y);
+    ctx.lineTo(tubeEnd, y);
+    ctx.stroke();
+    ctx.strokeStyle = tubeColor;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(tubeStart, y);
+    ctx.lineTo(tubeEnd, y);
+    ctx.stroke();
+
+    if (state.params.enhancement) {
+      ctx.strokeStyle = "rgba(255, 208, 90, 0.34)";
+      ctx.lineWidth = 1;
+      for (let x = tubeStart + 12; x < tubeEnd - 8; x += 14) {
+        ctx.beginPath();
+        ctx.moveTo(x, y - 5);
+        ctx.lineTo(x + 5, y + 5);
+        ctx.stroke();
+      }
+    }
+  }
+
+  const baffleXs = [220, 330, 440, 550, 660, 770];
+  baffleXs.forEach((x, index) => {
+    ctx.strokeStyle = "rgba(111, 158, 177, 0.36)";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    if (index % 2 === 0) {
+      ctx.moveTo(x, shell.y + 42);
+      ctx.quadraticCurveTo(x, shell.y + 68, x + 24, shell.y + 68);
+      ctx.lineTo(x + 24, shell.y + shell.h - 42);
+    } else {
+      ctx.moveTo(x, shell.y + shell.h - 42);
+      ctx.quadraticCurveTo(x, shell.y + shell.h - 68, x + 24, shell.y + shell.h - 68);
+      ctx.lineTo(x + 24, shell.y + 42);
+    }
+    ctx.stroke();
+  });
+
+  const direction = counter ? -1 : 1;
+  const phase = ((time * 17) % 24) * direction;
+  for (let x = tubeStart + 20; x < tubeEnd - 10; x += 42) {
+    const offsetX = x + phase;
+    const drawX = direction > 0 ? clamp(offsetX, tubeStart, tubeEnd) : clamp(offsetX, tubeStart, tubeEnd);
+    ctx.fillStyle = "rgba(197, 247, 255, 0.55)";
+    ctx.beginPath();
+    ctx.moveTo(drawX + direction * 6, 269);
+    ctx.lineTo(drawX - direction * 3, 265);
+    ctx.lineTo(drawX - direction * 3, 273);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawFlowParticles(ctx, shell, metrics, time) {
+  if (!state.params) return;
+  const flowSpeed = 0.3 + state.params.coldFlow * 0.58;
+  const hotSpeed = 0.25 + state.params.hotFlow * 0.48;
+
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+  particles.forEach((particle, index) => {
+    if (particle.type === "cold") {
+      particle.progress += (0.0007 + particle.speed * 0.004) * flowSpeed;
+    } else if (particle.type === "hot") {
+      particle.progress += (0.0006 + particle.speed * 0.0038) * hotSpeed;
+    } else {
+      particle.progress += 0.0009;
+    }
+
+    if (particle.progress > 1.02) {
+      particle.progress = -0.02;
+      particle.lane = Math.floor(Math.random() * 7);
+    }
+
+    let x;
+    let y;
+    let color;
+
+    if (particle.type === "cold") {
+      const direction = 1;
+      const lane = particle.lane % 5;
+      x = lerp(shell.x + 50, shell.x + shell.w - 50, particle.progress);
+      y = getTubeY(lane) + Math.sin(time * 3 + particle.wobble) * 2;
+      color = "70, 217, 255";
+    } else if (particle.type === "hot") {
+      const direction = state.params.counterflow ? -1 : 1;
+      const normalized =
+        direction === 1 ? particle.progress : 1 - particle.progress;
+      x = lerp(shell.x + 42, shell.x + shell.w - 42, normalized);
+      y =
+        shell.y +
+        55 +
+        ((particle.lane * 31 + Math.sin(time * 1.8 + particle.wobble) * 16) %
+          (shell.h - 110));
+      color = "255, 117, 70";
+    } else {
+      x = lerp(shell.x + 78, shell.x + shell.w - 80, particle.progress);
+      y = 248 + Math.sin(particle.progress * 16 + time * 2 + particle.wobble) * 76;
+      color = "255, 208, 90";
+    }
+
+    const glow = ctx.createRadialGradient(x, y, 0, x, y, particle.size * 5);
+    glow.addColorStop(0, `rgba(${color}, 0.8)`);
+    glow.addColorStop(0.2, `rgba(${color}, 0.28)`);
+    glow.addColorStop(1, `rgba(${color}, 0)`);
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(x, y, particle.size * 5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = `rgba(${color}, 0.86)`;
+    ctx.beginPath();
+    ctx.arc(x, y, particle.size, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.restore();
+}
+
+function drawFouling(ctx, shell, time) {
+  if (!state.params || state.params.fouling < 0.045) return;
+  ctx.save();
+  ctx.strokeStyle = `rgba(191, 122, 53, ${0.15 + state.params.fouling * 0.58})`;
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 5]);
+  ctx.lineDashOffset = time * 4;
+
+  for (let i = 0; i < 5; i += 1) {
+    const y = getTubeY(i);
+    ctx.beginPath();
+    ctx.moveTo(shell.x + 55, y - 4);
+    ctx.lineTo(shell.x + shell.w - 55, y - 4);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawSensors(ctx, shell, metrics) {
+  const sensors = [
+    { x: shell.x + 16, y: 170, label: "T1", value: PHYSICS.hotInlet },
+    { x: shell.x + 16, y: 350, label: "T2", value: PHYSICS.coldInlet },
+    { x: shell.x + shell.w - 16, y: 170, label: "T3", value: metrics.hotOut },
+    { x: shell.x + shell.w - 16, y: 350, label: "T4", value: metrics.coldOut }
+  ];
+
+  ctx.save();
+  sensors.forEach((sensor, index) => {
+    const isHot = index < 3 && index !== 1;
+    ctx.fillStyle = isHot ? "#ff9a72" : "#71e1ff";
+    ctx.beginPath();
+    ctx.arc(sensor.x, sensor.y, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = isHot ? "rgba(255, 117, 70, .4)" : "rgba(70, 217, 255, .4)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(sensor.x, sensor.y, 9, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = "rgba(175, 205, 217, 0.65)";
+    ctx.font = "9px 'Cascadia Mono', Consolas, monospace";
+    ctx.fillText(
+      `${sensor.label} ${formatNumber(sensor.value, 1)}°`,
+      sensor.x - 27,
+      sensor.y - 15
+    );
+  });
+  ctx.restore();
+}
+
+function drawCanvasLabels(ctx, shell, metrics, tempNormalized) {
+  const counter = state.params.counterflow;
+  ctx.save();
+  ctx.font = "11px 'Microsoft YaHei UI', 'PingFang SC', sans-serif";
+
+  const hotInX = counter ? 858 : 22;
+  const hotInY = counter ? 87 : 95;
+  const hotOutX = counter ? 22 : 862;
+  const hotOutY = counter ? 421 : 95;
+  const coldOutX = 858;
+  const coldOutY = counter ? 195 : 403;
+
+  ctx.fillStyle = "rgba(255, 158, 120, 0.74)";
+  ctx.fillText("热流体入口", hotInX, hotInY);
+  ctx.fillText("125°C", hotInX, hotInY + 19);
+
+  ctx.fillStyle = "rgba(112, 225, 255, 0.74)";
+  ctx.fillText("冷流体入口", 28, 359);
+  ctx.fillText("25°C", 28, 378);
+
+  ctx.fillStyle = "rgba(255, 158, 120, 0.74)";
+  ctx.fillText("热流体出口", hotOutX, hotOutY);
+  ctx.fillText(`${formatNumber(metrics.hotOut, 1)}°C`, hotOutX, hotOutY + 19);
+
+  ctx.fillStyle = "rgba(112, 225, 255, 0.82)";
+  ctx.fillText("冷流体出口", coldOutX, coldOutY);
+  ctx.fillText(
+    `${formatNumber(metrics.coldOut, 1)}°C`,
+    coldOutX,
+    coldOutY + 19
+  );
+
+  ctx.textAlign = "center";
+  ctx.fillStyle = "rgba(149, 185, 200, 0.55)";
+  ctx.font = "9px 'Cascadia Mono', Consolas, monospace";
+  ctx.fillText(
+    `Q ${formatNumber(metrics.Q, 1)} kW  ·  K ${formatNumber(metrics.K, 2)} kW/K  ·  P ${formatNumber(metrics.pump, 1)} kW`,
+    shell.x + shell.w / 2,
+    448
+  );
+
+  ctx.fillStyle = `rgba(70, 217, 255, ${0.12 + tempNormalized * 0.2})`;
+  ctx.fillRect(shell.x + shell.w / 2 - 140, 460, 280 * tempNormalized, 2);
+  ctx.restore();
+}
+
+function drawGameLoop(now) {
+  state.globalTime = now / 1000;
+  if (!dom.gameScreen.hidden && state.params) {
+    drawExchanger(now);
+    renderLiveCanvasOnly();
+  }
+  if (!dom.settlementScreen.hidden) {
+    drawSettlement(now);
+  }
+  requestAnimationFrame(drawGameLoop);
+}
+
+let lastMetricPaint = 0;
+function renderLiveCanvasOnly() {
+  if (performance.now() - lastMetricPaint < 80) return;
+  lastMetricPaint = performance.now();
+  const metrics = calculateMetrics(state.params);
+  state.metrics = metrics;
+  dom.coldOutValue.textContent = formatNumber(metrics.coldOut, 1);
+  dom.heatValue.textContent = formatNumber(metrics.Q, 1);
+  dom.pumpValue.textContent = formatNumber(metrics.pump, 1);
+  dom.kValue.textContent = formatNumber(metrics.K, 2);
+}
+
+function createSettlementParticles() {
+  settlementParticles = Array.from({ length: 170 }, () => {
+    const angle = Math.random() * Math.PI * 2;
+    const radius = 160 + Math.random() * Math.min(window.innerWidth, window.innerHeight) * 0.52;
+    return {
+      angle,
+      radius,
+      speed: 0.08 + Math.random() * 0.22,
+      size: 0.7 + Math.random() * 2.4,
+      color: Math.random() > 0.62 ? "255, 138, 85" : "82, 221, 255",
+      alpha: 0.18 + Math.random() * 0.58
+    };
+  });
+}
+
+function drawSettlement(now) {
+  const canvas = dom.settlementCanvas;
+  const rect = canvas.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  if (canvas.width !== Math.round(rect.width * dpr)) {
+    canvas.width = Math.round(rect.width * dpr);
+    canvas.height = Math.round(rect.height * dpr);
+  }
+
+  const ctx = canvas.getContext("2d");
+  const width = rect.width;
+  const height = rect.height;
+  const time = (now - settlementStart) / 1000;
+  const centerX = width / 2;
+  const centerY = height * 0.39;
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, width, height);
+  ctx.save();
+  ctx.globalCompositeOperation = "lighter";
+
+  settlementParticles.forEach((particle, index) => {
+    const convergence = clamp(0.55 + Math.sin(time * 0.9 + index) * 0.18, 0.2, 1);
+    const angle = particle.angle + time * particle.speed * (index % 2 === 0 ? 1 : -1);
+    const pulse = 1 - (time * 0.08) % 0.45;
+    const radius = particle.radius * convergence * pulse;
+    const x = centerX + Math.cos(angle) * radius;
+    const y = centerY + Math.sin(angle) * radius * 0.62;
+    const alpha = particle.alpha * clamp(1 - Math.max(0, time - 4) * 0.2, 0, 1);
+
+    ctx.fillStyle = `rgba(${particle.color}, ${alpha})`;
+    ctx.beginPath();
+    ctx.arc(x, y, particle.size, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (index % 9 === 0) {
+      ctx.strokeStyle = `rgba(${particle.color}, ${alpha * 0.16})`;
+      ctx.lineWidth = 0.6;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(centerX, centerY);
+      ctx.stroke();
+    }
+  });
+
+  const glow = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 240);
+  glow.addColorStop(0, "rgba(70, 217, 255, 0.12)");
+  glow.addColorStop(0.24, "rgba(70, 217, 255, 0.045)");
+  glow.addColorStop(1, "rgba(70, 217, 255, 0)");
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, width, height);
+  ctx.restore();
+}
+
+function bindEvents() {
+  dom.startBtn.addEventListener("click", startGame);
+  dom.startHelpBtn.addEventListener("click", openFormula);
+  dom.formulaBtn.addEventListener("click", openFormula);
+  dom.soundBtn.addEventListener("click", toggleSound);
+  dom.pauseBtn.addEventListener("click", () => {
+    if (!dom.gameScreen.hidden) {
+      openModal("pause");
+      playClick();
+    }
+  });
+
+  dom.hotFlow.addEventListener("input", (event) => {
+    changeParam("hotFlow", Number(event.target.value));
+    playClick();
+  });
+  dom.coldFlow.addEventListener("input", (event) => {
+    changeParam("coldFlow", Number(event.target.value));
+  });
+  dom.areaFactor.addEventListener("input", (event) => {
+    changeParam("area", Number(event.target.value));
+  });
+
+  dom.parallelBtn.addEventListener("click", () => {
+    if (state.submitting) return;
+    state.params.counterflow = false;
+    updateAll();
+    playTone({ frequency: 390, duration: 0.08, gain: 0.018 });
+  });
+  dom.counterBtn.addEventListener("click", () => {
+    if (state.submitting) return;
+    state.params.counterflow = true;
+    updateAll();
+    playTone({ frequency: 550, duration: 0.08, gain: 0.018 });
+  });
+  dom.turbulatorBtn.addEventListener("click", () => {
+    if (state.submitting || dom.turbulatorBtn.disabled) return;
+    state.params.enhancement = !state.params.enhancement;
+    updateAll();
+    playTone({ frequency: state.params.enhancement ? 670 : 430, duration: 0.11, gain: 0.02 });
+    showToast(state.params.enhancement ? "强化传热已投用：K 上升，泵耗增加" : "强化传热已停用");
+  });
+  dom.cleanBtn.addEventListener("click", cleanExchanger);
+  dom.submitBtn.addEventListener("click", submitMission);
+  dom.restartMissionBtn.addEventListener("click", () => {
+    if (state.submitting) return;
+    loadMission(state.missionIndex, false);
+    showToast("本关参数已重置");
+  });
+
+  dom.briefingStartBtn.addEventListener("click", () => {
+    closeModal();
+    playClick();
+  });
+  dom.briefingCloseBtn.addEventListener("click", () => {
+    closeModal();
+    playClick();
+  });
+  dom.retryBtn.addEventListener("click", retryMission);
+  dom.nextBtn.addEventListener("click", goNextMission);
+  dom.continueBtn.addEventListener("click", closeModal);
+  dom.pauseRestartBtn.addEventListener("click", () => {
+    closeModal();
+    startGame();
+  });
+  dom.replayBtn.addEventListener("click", replayGame);
+  dom.reportReplayBtn.addEventListener("click", replayGame);
+  dom.viewReportBtn.addEventListener("click", () => {
+    buildReportTable();
+    openModal("report");
+    playClick();
+  });
+  dom.skipSettlementBtn.addEventListener("click", skipSettlement);
+
+  $$(".formula-close, .report-close").forEach((button) => {
+    button.addEventListener("click", () => {
+      closeModal();
+      playClick();
+    });
+  });
+
+  dom.modalBackdrop.addEventListener("click", (event) => {
+    if (event.target !== dom.modalBackdrop) return;
+    if (state.modal === "result") return;
+    closeModal();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && state.modal) {
+      if (state.modal !== "result") closeModal();
+    }
+    if (
+      event.key === "Enter" &&
+      !state.submitting &&
+      !dom.gameScreen.hidden &&
+      !state.modal
+    ) {
+      submitMission();
+    }
+  });
+
+  window.addEventListener("resize", resizeCanvas);
+}
+
+function init() {
+  bindEvents();
+  resizeCanvas();
+  if ("ResizeObserver" in window) {
+    const observer = new ResizeObserver(resizeCanvas);
+    observer.observe(dom.canvas);
+  }
+  requestAnimationFrame(drawGameLoop);
+}
+
+init();
+
+</script>
+</body>
+</html>
